@@ -1,10 +1,9 @@
-import React from 'react';
-import {
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  ArrowUpRight,
-  ArrowDownRight,
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  ArrowUpRight, 
+  ArrowDownRight, 
   Plus,
   ArrowRight,
   PieChart as PieIcon,
@@ -13,42 +12,41 @@ import {
   IndianRupee
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
   ResponsiveContainer,
-  AreaChart,
-  Area,
   PieChart,
   Pie,
-  Cell,
-  Legend
+  Cell
 } from 'recharts';
+import AddTransactionModal from './AddTransactionModal';
 
-const lineData = [
-  { name: 'Oct', value: 12500 },
-  { name: 'Nov', value: 13200 },
-  { name: 'Dec', value: 12800 },
-  { name: 'Jan', value: 14200 },
-  { name: 'Feb', value: 15300 },
-  { name: 'Mar', value: 16800 },
+const INITIAL_TRANSACTIONS = [
+  { id: 1, name: 'Water Bill', category: 'Bills', amount: 42.00, date: 'Mar 30', type: 'Expense', isPositive: false },
+  { id: 2, name: 'Bus Pass', category: 'Transport', amount: 45.00, date: 'Mar 28', type: 'Expense', isPositive: false },
+  { id: 3, name: 'Pharmacy', category: 'Healthcare', amount: 32.50, date: 'Mar 27', type: 'Expense', isPositive: false },
+  { id: 4, name: 'Freelance Bonus', category: 'Freelance', amount: 500.00, date: 'Mar 25', type: 'Income', isPositive: true },
+  { id: 5, name: 'Clothing Store', category: 'Shopping', amount: 210.00, date: 'Mar 24', type: 'Expense', isPositive: false },
 ];
 
-const pieData = [
-  { name: 'Bills', value: 45, color: '#4F46E5' },
-  { name: 'Food', value: 25, color: '#10B981' },
-  { name: 'Shopping', value: 15, color: '#8B5CF6' },
-  { name: 'Entertainment', value: 10, color: '#F59E0B' },
-  { name: 'Healthcare', value: 5, color: '#EF4444' },
-  { name: 'Other', value: 5, color: '#ab19a4ff' },
-];
+const CATEGORY_COLORS = {
+  Bills: '#4F46E5',
+  Food: '#10B981',
+  Shopping: '#8B5CF6',
+  Entertainment: '#F59E0B',
+  Healthcare: '#EF4444',
+  Other: '#ab19a4ff',
+  Transport: '#06B6D4',
+  Freelance: '#F472B6',
+};
 
-const StatCard = ({ title, amount, icon, iconBg, iconColor, trendIcon, trendColor }) => (
-  <motion.div
+const StatCard = ({ title, amount, icon, iconBg, iconColor }) => (
+  <motion.div 
     whileHover={{ y: -4 }}
     className="card flex items-center justify-between group"
   >
@@ -75,7 +73,7 @@ const TransactionItem = ({ name, category, amount, date, isPositive }) => (
     </div>
     <div className="text-right">
       <p className={`text-sm font-bold ${isPositive ? 'text-emerald-600' : 'text-zinc-900 dark:text-zinc-100'}`}>
-        {isPositive ? '+' : '-'}₹{amount}
+        {isPositive ? '+' : '-'}₹{amount.toLocaleString()}
       </p>
     </div>
   </div>
@@ -94,6 +92,58 @@ const CustomTooltip = ({ active, payload }) => {
 };
 
 const Dashboard = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [transactions, setTransactions] = useState(() => {
+    const saved = localStorage.getItem('basepoint_transactions');
+    return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('basepoint_transactions', JSON.stringify(transactions));
+  }, [transactions]);
+
+  const stats = useMemo(() => {
+    const income = transactions.reduce((acc, curr) => curr.isPositive ? acc + curr.amount : acc, 0);
+    const expenses = transactions.reduce((acc, curr) => !curr.isPositive ? acc + curr.amount : acc, 0);
+    const startingBalance = 10000; // Baseline
+    return {
+      balance: startingBalance + income - expenses,
+      income,
+      expenses
+    };
+  }, [transactions]);
+
+  const pieData = useMemo(() => {
+    const categories = {};
+    transactions.forEach(t => {
+      if (!t.isPositive) {
+        categories[t.category] = (categories[t.category] || 0) + t.amount;
+      }
+    });
+    return Object.entries(categories).map(([name, value]) => ({
+      name,
+      value,
+      color: CATEGORY_COLORS[name] || '#94a3b8'
+    }));
+  }, [transactions]);
+
+  // Generate data points for the trend chart
+  const lineData = useMemo(() => {
+    // We'll simulate a 6-month historical trend and add the current month's dynamic activity
+    const historical = [
+      { name: 'Oct', value: 8500 },
+      { name: 'Nov', value: 9200 },
+      { name: 'Dec', value: 8800 },
+      { name: 'Jan', value: 9600 },
+      { name: 'Feb', value: 10000 },
+    ];
+    return [...historical, { name: 'Mar', value: stats.balance }];
+  }, [stats.balance]);
+
+  const addTransaction = (newTx) => {
+    setTransactions([newTx, ...transactions]);
+  };
+
   return (
     <div className="space-y-8 pb-10">
       {/* Header */}
@@ -109,7 +159,7 @@ const Dashboard = () => {
             <MoreVertical size={20} />
           </button>
           <button 
-            onClick={() => alert('Add Transaction Modal coming soon!')}
+            onClick={() => setIsModalOpen(true)}
             className="btn-primary flex items-center gap-2"
           >
             <Plus size={20} />
@@ -118,27 +168,33 @@ const Dashboard = () => {
         </div>
       </div>
 
+      <AddTransactionModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onAdd={addTransaction}
+      />
+
       {/* 3 Top Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <StatCard
-          title="Total Balance"
-          amount="₹10,353.54"
-          icon={<IndianRupee size={20} />}
-          iconBg="bg-blue-50 dark:bg-blue-900/20"
+        <StatCard 
+          title="Total Balance" 
+          amount={`₹${stats.balance.toLocaleString()}`} 
+          icon={<IndianRupee size={20} />} 
+          iconBg="bg-blue-50 dark:bg-blue-900/20" 
           iconColor="text-blue-600 dark:text-blue-400"
         />
-        <StatCard
-          title="Total Income"
-          amount="₹13,520.00"
-          icon={<TrendingUp size={20} />}
-          iconBg="bg-emerald-50 dark:bg-emerald-900/20"
+        <StatCard 
+          title="Total Income" 
+          amount={`₹${stats.income.toLocaleString()}`} 
+          icon={<TrendingUp size={20} />} 
+          iconBg="bg-emerald-50 dark:bg-emerald-900/20" 
           iconColor="text-emerald-600 dark:text-emerald-400"
         />
-        <StatCard
-          title="Total Expenses"
-          amount="₹3,166.46"
-          icon={<TrendingDown size={20} />}
-          iconBg="bg-rose-50 dark:bg-rose-900/20"
+        <StatCard 
+          title="Total Expenses" 
+          amount={`₹${stats.expenses.toLocaleString()}`} 
+          icon={<TrendingDown size={20} />} 
+          iconBg="bg-rose-50 dark:bg-rose-900/20" 
           iconColor="text-rose-600 dark:text-rose-400"
         />
       </div>
@@ -158,25 +214,25 @@ const Dashboard = () => {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={lineData} margin={{ top: 5, right: 20, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" opacity={0.5} />
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280' }}
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 12, fill: '#6B7280' }} 
                   dy={10}
                 />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280' }}
-                  tickFormatter={(val) => `₹${val / 1000}k`}
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 12, fill: '#6B7280' }} 
+                  tickFormatter={(val) => `₹${val/1000}k`}
                 />
                 <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#6366F1', strokeWidth: 1, strokeDasharray: '3 3' }} />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#4F46E5"
-                  strokeWidth={3}
+                <Line 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#4F46E5" 
+                  strokeWidth={3} 
                   dot={{ r: 4, fill: '#4F46E5', strokeWidth: 2, stroke: '#fff' }}
                   activeDot={{ r: 6, strokeWidth: 0 }}
                   animationDuration={1500}
@@ -190,38 +246,38 @@ const Dashboard = () => {
         <div className="card flex flex-col">
           <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100 mb-8">Spending by Category</h3>
           <div className="flex-1 w-full flex items-center justify-center relative min-h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={65}
-                  outerRadius={95}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
-              <div className="text-center">
-                <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest opacity-80">Overall</p>
-                <p className="text-2xl font-black text-zinc-900 dark:text-zinc-100 tracking-tighter">₹3,166</p>
-              </div>
-            </div>
+             <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={65}
+                    outerRadius={95}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+             </ResponsiveContainer>
+             <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
+                <div className="text-center">
+                  <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest opacity-80">Overall</p>
+                  <p className="text-2xl font-black text-zinc-900 dark:text-zinc-100 tracking-tighter">₹{stats.expenses.toLocaleString()}</p>
+                </div>
+             </div>
           </div>
           <div className="grid grid-cols-2 gap-4 mt-6">
-            {pieData.map((item) => (
-              <div key={item.name} className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 capitalize">{item.name}</span>
-              </div>
-            ))}
+             {pieData.map((item) => (
+               <div key={item.name} className="flex items-center gap-2">
+                 <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: item.color }} />
+                 <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 capitalize">{item.name}</span>
+               </div>
+             ))}
           </div>
         </div>
       </div>
@@ -230,75 +286,77 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Transactions */}
         <div className="card lg:col-span-2">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">Recent Transactions</h3>
-            <button className="text-sm font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 hover:underline underline-offset-4">
-              View All
-              <ArrowRight size={14} />
-            </button>
-          </div>
-          <div className="space-y-1">
-            <TransactionItem name="Water Bill" category="Bills" amount="42.00" date="Mar 30" isPositive={false} />
-            <TransactionItem name="Bus Pass" category="Transport" amount="45.00" date="Mar 28" isPositive={false} />
-            <TransactionItem name="Pharmacy" category="Healthcare" amount="32.50" date="Mar 27" isPositive={false} />
-            <TransactionItem name="Freelance Bonus" category="Freelance" amount="500.00" date="Mar 25" isPositive={true} />
-            <TransactionItem name="Clothing Store" category="Shopping" amount="210.00" date="Mar 24" isPositive={false} />
-          </div>
+           <div className="flex items-center justify-between mb-8">
+              <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">Recent Transactions</h3>
+              <button className="text-sm font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 hover:underline underline-offset-4">
+                View All
+                <ArrowRight size={14} />
+              </button>
+           </div>
+           <div className="space-y-1">
+              {transactions.slice(0, 5).map(tx => (
+                <TransactionItem key={tx.id} {...tx} />
+              ))}
+           </div>
         </div>
 
         {/* Insights Section */}
         <div className="card space-y-8">
-          <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">Insights</h3>
+           <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">Insights</h3>
+           
+           <div className="space-y-6">
+              <div className="flex items-center gap-4 group">
+                <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
+                  <PieIcon size={20} />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Top Spending Category</p>
+                  <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">
+                    {pieData.length > 0 ? `${pieData.sort((a,b) => b.value - a.value)[0].name} — ₹${pieData[0].value.toLocaleString()}` : 'None'}
+                  </h4>
+                </div>
+              </div>
 
-          <div className="space-y-6">
-            <div className="flex items-center gap-4 group">
-              <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
-                <PieIcon size={20} />
+              <div className="flex items-center gap-4 group">
+                <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                  <TrendingDown size={20} />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Monthly Spending</p>
+                  <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">₹{stats.expenses.toLocaleString()} this month</h4>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Top Spending Category</p>
-                <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">Bills — ₹1,741.99</h4>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-4 group">
-              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
-                <TrendingDown size={20} />
+              <div className="flex items-center gap-4 group">
+                <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                  <Search size={20} />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Balance Status</p>
+                  <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">
+                    {stats.balance > 10000 ? 'Positive Growth' : 'Spending exceeds income'}
+                  </h4>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Monthly Spending Change</p>
-                <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">-26.5% vs Last Month</h4>
-              </div>
-            </div>
+           </div>
 
-            <div className="flex items-center gap-4 group">
-              <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
-                <Search size={20} />
+           <div className="p-4 bg-indigo-600 rounded-2xl relative overflow-hidden group">
+              <div className="relative z-10">
+                <h4 className="text-white font-bold">Pro Savings Goal</h4>
+                <p className="text-indigo-100 text-xs mt-1">Goal: ₹20,000</p>
+                <p className="text-white text-lg font-bold mt-2">₹{stats.balance.toLocaleString()}</p>
+                <div className="w-full h-1.5 bg-indigo-400/50 rounded-full mt-4">
+                   <motion.div 
+                     initial={{ width: 0 }}
+                     animate={{ width: `${Math.min((stats.balance / 20000) * 100, 100)}%` }}
+                     className="h-full bg-white rounded-full" 
+                   />
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Financial Observation</p>
-                <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">Spending decreased by 26%</h4>
+              <div className="absolute -bottom-4 -right-4 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                <TrendingUp size={64} className="text-white" />
               </div>
-            </div>
-          </div>
-
-          <div className="p-4 bg-indigo-600 rounded-2xl relative overflow-hidden group">
-            <div className="relative z-10">
-              <h4 className="text-white font-bold">Pro Savings Goal</h4>
-              <p className="text-indigo-100 text-xs mt-1">You're 65% of the way there!</p>
-              <p className="text-white text-lg font-bold mt-2">₹5,000.00</p>
-              <div className="w-full h-1.5 bg-indigo-400/50 rounded-full mt-4">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: '65%' }}
-                  className="h-full bg-white rounded-full"
-                />
-              </div>
-            </div>
-            <div className="absolute -bottom-4 -right-4 p-4 opacity-10 group-hover:scale-110 transition-transform">
-              <TrendingUp size={64} className="text-white" />
-            </div>
-          </div>
+           </div>
         </div>
       </div>
     </div>
