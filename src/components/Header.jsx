@@ -1,0 +1,126 @@
+import React, { useState } from 'react';
+import { 
+  Search, 
+  Sun, 
+  Moon, 
+  Bell, 
+  User, 
+  ChevronDown, 
+  Check, 
+  LogOut, 
+  Menu
+} from 'lucide-react';
+import { useTheme } from './ThemeContext';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const Header = ({ setIsMobileMenuOpen }) => {
+  const { theme, toggleTheme, role, setRole } = useTheme();
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+
+  const roles = ['Admin', 'Viewer', 'Editor'];
+
+  return (
+    <header className="h-20 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-30 px-6">
+      <div className="flex items-center justify-between h-full max-w-7xl mx-auto">
+        <div className="flex items-center gap-4 flex-1">
+          <button 
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="lg:hidden p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500"
+          >
+            <Menu size={20} />
+          </button>
+
+          <div className="relative max-w-md w-full hidden sm:block group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-indigo-500 transition-colors" />
+            <input 
+              type="text" 
+              placeholder="Search anything..." 
+              className="w-full bg-zinc-100 dark:bg-zinc-800 border-transparent focus:border-indigo-500 focus:ring-0 rounded-xl py-2 pl-10 pr-4 text-sm transition-all dark:text-zinc-200 focus:bg-white dark:focus:bg-zinc-950 border border-zinc-200/50 dark:border-zinc-700/50"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Theme Toggle */}
+          <motion.button 
+            whileTap={{ scale: 0.95 }}
+            onClick={toggleTheme}
+            className="p-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 transition-colors"
+          >
+            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+          </motion.button>
+
+          {/* Notifications */}
+          <button 
+            onClick={() => alert('No new notifications!')}
+            className="p-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 relative group transition-colors"
+          >
+            <Bell size={20} />
+            <span className="absolute top-2.5 right-3 w-2 h-2 bg-indigo-600 rounded-full border-2 border-white dark:border-zinc-900 shadow-sm" />
+          </button>
+
+          {/* Role Switcher */}
+          <div className="relative">
+            <motion.button 
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all text-sm font-medium text-zinc-900 dark:text-zinc-100 shadow-sm"
+            >
+              <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 flex items-center justify-center text-[10px] font-bold">
+                {role[0]}
+              </div>
+              <span className="hidden md:inline">{role}</span>
+              <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
+            </motion.button>
+
+            <AnimatePresence>
+              {isRoleDropdownOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-10" 
+                    onClick={() => setIsRoleDropdownOpen(false)}
+                  />
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl z-50 overflow-hidden py-1.5"
+                  >
+                    <div className="px-3 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                      Switch Role
+                    </div>
+                    {roles.map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => {
+                          setRole(r);
+                          setIsRoleDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors
+                          ${role === r 
+                            ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-medium' 
+                            : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                          }
+                        `}
+                      >
+                        {r}
+                        {role === r && <Check size={14} className="text-indigo-600 dark:text-indigo-400" />}
+                      </button>
+                    ))}
+                    <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1.5" />
+                    <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
+                      <LogOut size={16} />
+                      Log out
+                    </button>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;
