@@ -13,8 +13,8 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { 
-  LineChart, 
-  Line, 
+  AreaChart, 
+  Area, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -22,7 +22,8 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  Sector
 } from 'recharts';
 import AddTransactionModal from './AddTransactionModal';
 
@@ -45,18 +46,50 @@ const CATEGORY_COLORS = {
   Freelance: '#F472B6',
 };
 
-const StatCard = ({ title, amount, icon, iconBg, iconColor }) => (
+const renderActiveShape = (props) => {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+  return (
+    <g>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius + 8}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+        className="transition-all duration-300"
+      />
+    </g>
+  );
+};
+
+const StatCard = ({ title, amount, icon, iconBg, iconColor, trend, trendLabel }) => (
   <motion.div 
+    variants={{
+      hidden: { opacity: 0, scale: 0.95, y: 20 },
+      visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+    }}
     whileHover={{ y: -4 }}
-    className="card flex items-center justify-between group"
+    className="card flex flex-col justify-between group"
   >
-    <div className="space-y-1">
-      <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">{title}</p>
-      <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">{amount}</h3>
+    <div className="flex items-center justify-between pointer-events-none">
+      <div className="space-y-1">
+        <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">{title}</p>
+        <h3 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">{amount}</h3>
+      </div>
+      <div className={`p-3 lg:p-4 rounded-2xl ${iconBg} ${iconColor} shadow-inner`}>
+        {icon}
+      </div>
     </div>
-    <div className={`p-3 rounded-2xl ${iconBg} ${iconColor} shadow-inner`}>
-      {icon}
-    </div>
+    {trend && (
+      <div className="mt-4 flex items-center gap-2 pointer-events-none">
+        <span className={`text-xs font-bold px-2 py-1 rounded-md ${trend.startsWith('+') ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400'}`}>
+          {trend}
+        </span>
+        <span className="text-xs font-medium text-zinc-500">{trendLabel}</span>
+      </div>
+    )}
   </motion.div>
 );
 
@@ -93,6 +126,7 @@ const CustomTooltip = ({ active, payload }) => {
 
 const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activePieIndex, setActivePieIndex] = useState(null);
   const [transactions, setTransactions] = useState(() => {
     const saved = localStorage.getItem('basepoint_transactions');
     return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
@@ -145,7 +179,15 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-8 pb-10">
+    <motion.div 
+      initial="hidden"
+      animate="visible"
+      variants={{
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+      }}
+      className="space-y-8 pb-10"
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -179,113 +221,145 @@ const Dashboard = () => {
         <StatCard 
           title="Total Balance" 
           amount={`₹${stats.balance.toLocaleString()}`} 
-          icon={<IndianRupee size={20} />} 
+          icon={<IndianRupee size={22} />} 
           iconBg="bg-blue-50 dark:bg-blue-900/20" 
           iconColor="text-blue-600 dark:text-blue-400"
+          trend="+4.2%"
+          trendLabel="from last month"
         />
         <StatCard 
           title="Total Income" 
           amount={`₹${stats.income.toLocaleString()}`} 
-          icon={<TrendingUp size={20} />} 
+          icon={<TrendingUp size={22} />} 
           iconBg="bg-emerald-50 dark:bg-emerald-900/20" 
           iconColor="text-emerald-600 dark:text-emerald-400"
+          trend="+12.5%"
+          trendLabel="from last month"
         />
         <StatCard 
           title="Total Expenses" 
           amount={`₹${stats.expenses.toLocaleString()}`} 
-          icon={<TrendingDown size={20} />} 
+          icon={<TrendingDown size={22} />} 
           iconBg="bg-rose-50 dark:bg-rose-900/20" 
           iconColor="text-rose-600 dark:text-rose-400"
+          trend="-1.2%"
+          trendLabel="from last month"
         />
       </div>
 
       {/* Main Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Balance Trend Line Chart */}
-        <div className="card lg:col-span-2 flex flex-col">
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="card lg:col-span-2 flex flex-col">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">Balance Trend</h3>
+            <div>
+              <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">Balance Trend</h3>
+              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Equity over the last 6 months</p>
+            </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 bg-indigo-600 rounded-full" />
-              <span className="text-xs font-semibold text-zinc-500">Income Stream</span>
+              <span className="w-3 h-3 bg-indigo-600 rounded-sm" />
+              <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">Balance</span>
             </div>
           </div>
-          <div className="flex-1 w-full h-[350px]">
+          <div className="flex-1 w-full h-[250px] sm:h-[300px] lg:h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={lineData} margin={{ top: 5, right: 20, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" opacity={0.5} />
+              <AreaChart data={lineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#4F46E5" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" opacity={0.4} />
                 <XAxis 
                   dataKey="name" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 12, fill: '#6B7280' }} 
+                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }} 
                   dy={10}
                 />
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 12, fill: '#6B7280' }} 
+                  tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }} 
                   tickFormatter={(val) => `₹${val/1000}k`}
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#6366F1', strokeWidth: 1, strokeDasharray: '3 3' }} />
-                <Line 
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#6366F1', strokeWidth: 1.5, strokeDasharray: '4 4' }} />
+                <Area 
                   type="monotone" 
                   dataKey="value" 
                   stroke="#4F46E5" 
                   strokeWidth={3} 
-                  dot={{ r: 4, fill: '#4F46E5', strokeWidth: 2, stroke: '#fff' }}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
-                  animationDuration={1500}
+                  fillOpacity={1} 
+                  fill="url(#colorBalance)" 
+                  activeDot={{ r: 6, fill: '#4F46E5', strokeWidth: 2, stroke: '#fff' }}
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </motion.div>
 
         {/* Spending Category Donut Chart */}
-        <div className="card flex flex-col">
+        <motion.div variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1 } }} className="card flex flex-col">
           <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100 mb-8">Spending by Category</h3>
-          <div className="flex-1 w-full flex items-center justify-center relative min-h-[300px]">
+          <div className="flex-1 w-full flex items-center justify-center relative min-h-[250px] sm:min-h-[300px]">
              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={65}
-                    outerRadius={95}
+                    innerRadius="65%"
+                    outerRadius="90%"
                     paddingAngle={5}
                     dataKey="value"
+                    activeIndex={activePieIndex}
+                    activeShape={renderActiveShape}
+                    onMouseEnter={(_, index) => setActivePieIndex(index)}
+                    onMouseLeave={() => setActivePieIndex(null)}
                   >
                     {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.color} 
+                        style={{ outline: "none", cursor: 'pointer' }}
+                      />
                     ))}
                   </Pie>
                   <Tooltip />
                 </PieChart>
              </ResponsiveContainer>
              <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
-                <div className="text-center">
-                  <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest opacity-80">Overall</p>
-                  <p className="text-2xl font-black text-zinc-900 dark:text-zinc-100 tracking-tighter">₹{stats.expenses.toLocaleString()}</p>
+                <div className="text-center transition-all">
+                  <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest opacity-80">
+                    {activePieIndex !== null ? pieData[activePieIndex].name : 'Overall'}
+                  </p>
+                  <p className="text-2xl font-black text-zinc-900 dark:text-zinc-100 tracking-tighter">
+                    ₹{activePieIndex !== null ? pieData[activePieIndex].value.toLocaleString() : stats.expenses.toLocaleString()}
+                  </p>
                 </div>
              </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 mt-6">
-             {pieData.map((item) => (
-               <div key={item.name} className="flex items-center gap-2">
-                 <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: item.color }} />
-                 <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 capitalize">{item.name}</span>
+          <div className="grid grid-cols-2 gap-x-2 gap-y-4 mt-6">
+             {pieData.map((item, idx) => (
+               <div 
+                 key={item.name} 
+                 className={`flex items-center gap-2 cursor-pointer transition-opacity duration-200 ${activePieIndex !== null && activePieIndex !== idx ? 'opacity-30' : 'opacity-100 hover:opacity-80'}`}
+                 onMouseEnter={() => setActivePieIndex(idx)}
+                 onMouseLeave={() => setActivePieIndex(null)}
+               >
+                 <div className="w-3 h-3 rounded-md shadow-sm shrink-0" style={{ backgroundColor: item.color }} />
+                 <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300 capitalize truncate">{item.name}</span>
                </div>
              ))}
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Bottom Row */}
+        {/* Bottom Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Transactions */}
-        <div className="card lg:col-span-2">
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="card lg:col-span-2">
            <div className="flex items-center justify-between mb-8">
               <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">Recent Transactions</h3>
               <button className="text-sm font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 hover:underline underline-offset-4">
@@ -298,10 +372,10 @@ const Dashboard = () => {
                 <TransactionItem key={tx.id} {...tx} />
               ))}
            </div>
-        </div>
+        </motion.div>
 
         {/* Insights Section */}
-        <div className="card space-y-8">
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="card space-y-8">
            <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">Insights</h3>
            
            <div className="space-y-6">
@@ -349,6 +423,7 @@ const Dashboard = () => {
                    <motion.div 
                      initial={{ width: 0 }}
                      animate={{ width: `${Math.min((stats.balance / 20000) * 100, 100)}%` }}
+                     transition={{ duration: 1, ease: "easeOut" }}
                      className="h-full bg-white rounded-full" 
                    />
                 </div>
@@ -357,9 +432,9 @@ const Dashboard = () => {
                 <TrendingUp size={64} className="text-white" />
               </div>
            </div>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

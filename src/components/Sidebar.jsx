@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { 
-  LayoutDashboard, 
-  ArrowRightLeft, 
-  PieChart, 
-  Settings, 
-  ChevronLeft, 
-  ChevronRight, 
-  Menu, 
+import {
+  LayoutDashboard,
+  ArrowRightLeft,
+  PieChart,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
   X,
   CreditCard
 } from 'lucide-react';
@@ -32,7 +32,7 @@ const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -64,9 +64,9 @@ const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
                 </span>
               )}
             </div>
-            
+
             {/* Desktop Collapse Toggle */}
-            <button 
+            <button
               onClick={() => setIsCollapsed(!isCollapsed)}
               className="hidden lg:flex p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors"
             >
@@ -74,7 +74,7 @@ const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
             </button>
 
             {/* Mobile Close Button */}
-            <button 
+            <button
               onClick={() => setIsMobileMenuOpen(false)}
               className="lg:hidden p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500"
             >
@@ -93,8 +93,8 @@ const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
                   if (item.title !== 'Dashboard') alert(`${item.title} section coming soon!`);
                 }}
                 className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group relative
-                  ${index === 0 
-                    ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-semibold' 
+                  ${index === 0
+                    ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-semibold'
                     : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100'
                   }`}
               >
@@ -105,10 +105,10 @@ const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
                   <span className="truncate whitespace-nowrap">{item.title}</span>
                 )}
                 {index === 0 && (
-                   <motion.div 
-                     layoutId="nav-pill"
-                     className="absolute left-0 w-1 h-6 bg-indigo-600 rounded-r-full"
-                   />
+                  <motion.div
+                    layoutId="nav-pill"
+                    className="absolute left-0 w-1 h-6 bg-indigo-600 rounded-r-full"
+                  />
                 )}
               </a>
             ))}
@@ -122,8 +122,8 @@ const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
               </div>
               {(!isCollapsed || isMobileMenuOpen) && (
                 <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">John Doe</span>
-                  <span className="text-xs text-zinc-500 truncate">john@basepoint.io</span>
+                  <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">Ankush Kumar</span>
+                  <span className="text-xs text-zinc-500 truncate">Ankush@basepoint.io</span>
                 </div>
               )}
             </div>

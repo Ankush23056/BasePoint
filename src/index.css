@@ -29,6 +29,6 @@ body {
   }
 
   .btn-primary {
-    @apply bg-indigo-600 dark:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-opacity-90 dark:hover:bg-opacity-90 transition-all cursor-pointer shadow-md shadow-indigo-500/20 active:scale-[0.98];
+    @apply bg-indigo-600 dark:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-semibold hover:opacity-90 transition-all cursor-pointer shadow-md shadow-indigo-500/20 active:scale-[0.98];
   }
 }
