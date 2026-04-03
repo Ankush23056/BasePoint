@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  ArrowUpRight, 
-  ArrowDownRight, 
+import {
+  TrendingUp,
+  TrendingDown,
+  ArrowUpRight,
+  ArrowDownRight,
   Plus,
   ArrowRight,
   PieChart as PieIcon,
@@ -12,13 +12,13 @@ import {
   IndianRupee
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -56,7 +56,7 @@ const renderActiveShape = (props) => {
 };
 
 const StatCard = ({ title, amount, icon, iconBg, iconColor, trend, trendLabel }) => (
-  <motion.div 
+  <motion.div
     variants={{
       hidden: { opacity: 0, scale: 0.95, y: 20 },
       visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
@@ -135,7 +135,7 @@ const Dashboard = () => {
   const isViewer = role === 'Viewer';
 
   const stats = useMemo(() => {
-    const income   = transactions.reduce((acc, curr) =>  curr.isPositive ? acc + curr.amount : acc, 0);
+    const income = transactions.reduce((acc, curr) => curr.isPositive ? acc + curr.amount : acc, 0);
     const expenses = transactions.reduce((acc, curr) => !curr.isPositive ? acc + curr.amount : acc, 0);
     const startingBalance = 10000;
     return { balance: startingBalance + income - expenses, income, expenses };
@@ -156,10 +156,10 @@ const Dashboard = () => {
   const lineData = useMemo(() => {
     const historical = [
       { name: 'Oct', value: 8500 },
-      { name: 'Nov', value: 9200 },
-      { name: 'Dec', value: 8800 },
-      { name: 'Jan', value: 9600 },
-      { name: 'Feb', value: 10000 },
+      { name: 'Nov', value: 38000 },
+      { name: 'Dec', value: 23500 },
+      { name: 'Jan', value: 16000 },
+      { name: 'Feb', value: 33000 },
     ];
     return [...historical, { name: 'Mar', value: Math.max(stats.balance, 0) }];
   }, [stats.balance]);
@@ -174,11 +174,11 @@ const Dashboard = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial="hidden"
       animate="visible"
       variants={{
-        hidden:  { opacity: 0 },
+        hidden: { opacity: 0 },
         visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
       }}
       className="space-y-8 pb-10"
@@ -196,7 +196,7 @@ const Dashboard = () => {
             <MoreVertical size={20} />
           </button>
           {!isViewer && (
-            <motion.button 
+            <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={() => setIsModalOpen(true)}
               className="btn-primary flex items-center gap-2"
@@ -208,37 +208,37 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <AddTransactionModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <AddTransactionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         onAdd={handleAdd}
       />
 
       {/* 3 Top Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <StatCard 
-          title="Total Balance" 
-          amount={`₹${stats.balance.toLocaleString('en-IN')}`} 
-          icon={<IndianRupee size={22} />} 
-          iconBg="bg-blue-50 dark:bg-blue-900/20" 
+        <StatCard
+          title="Total Balance"
+          amount={`₹${stats.balance.toLocaleString('en-IN')}`}
+          icon={<IndianRupee size={22} />}
+          iconBg="bg-blue-50 dark:bg-blue-900/20"
           iconColor="text-blue-600 dark:text-blue-400"
           trend="+4.2%"
           trendLabel="from last month"
         />
-        <StatCard 
-          title="Total Income" 
-          amount={`₹${stats.income.toLocaleString('en-IN')}`} 
-          icon={<TrendingUp size={22} />} 
-          iconBg="bg-emerald-50 dark:bg-emerald-900/20" 
+        <StatCard
+          title="Total Income"
+          amount={`₹${stats.income.toLocaleString('en-IN')}`}
+          icon={<TrendingUp size={22} />}
+          iconBg="bg-emerald-50 dark:bg-emerald-900/20"
           iconColor="text-emerald-600 dark:text-emerald-400"
           trend="+12.5%"
           trendLabel="from last month"
         />
-        <StatCard 
-          title="Total Expenses" 
-          amount={`₹${stats.expenses.toLocaleString('en-IN')}`} 
-          icon={<TrendingDown size={22} />} 
-          iconBg="bg-rose-50 dark:bg-rose-900/20" 
+        <StatCard
+          title="Total Expenses"
+          amount={`₹${stats.expenses.toLocaleString('en-IN')}`}
+          icon={<TrendingDown size={22} />}
+          iconBg="bg-rose-50 dark:bg-rose-900/20"
           iconColor="text-rose-600 dark:text-rose-400"
           trend="-1.2%"
           trendLabel="from last month"
@@ -264,15 +264,15 @@ const Dashboard = () => {
               <AreaChart data={lineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#4F46E5" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#4F46E5" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" opacity={0.4} />
+                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#E5E7EB" opacity={0.6} />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }} tickFormatter={(val) => `₹${val/1000}k`} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }} tickFormatter={(val) => `₹${val / 1000}k`} />
                 <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#6366F1', strokeWidth: 1.5, strokeDasharray: '4 4' }} />
-                <Area type="monotone" dataKey="value" stroke="#4F46E5" strokeWidth={3} fillOpacity={1} fill="url(#colorBalance)" activeDot={{ r: 6, fill: '#4F46E5', strokeWidth: 2, stroke: '#fff' }} />
+                <Area type="monotone" dataKey="value" stroke="#4F46E5" strokeWidth={3} fillOpacity={1} fill="url(#colorBalance)" dot={{ r: 5, fill: '#4F46E5', strokeWidth: 2, stroke: '#ffffff' }} activeDot={{ r: 7, fill: '#4F46E5', strokeWidth: 3, stroke: '#ffffff' }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -312,8 +312,8 @@ const Dashboard = () => {
           </div>
           <div className="grid grid-cols-2 gap-x-2 gap-y-4 mt-6">
             {pieData.map((item, idx) => (
-              <div 
-                key={item.name} 
+              <div
+                key={item.name}
                 className={`flex items-center gap-2 cursor-pointer transition-opacity duration-200 ${activePieIndex !== null && activePieIndex !== idx ? 'opacity-30' : 'opacity-100 hover:opacity-80'}`}
                 onMouseEnter={() => setActivePieIndex(idx)}
                 onMouseLeave={() => setActivePieIndex(null)}
@@ -346,7 +346,7 @@ const Dashboard = () => {
         {/* Insights Section */}
         <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="card space-y-8">
           <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">Insights</h3>
-          
+
           <div className="space-y-6">
             <div className="flex items-center gap-4 group">
               <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
@@ -355,8 +355,8 @@ const Dashboard = () => {
               <div>
                 <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Top Spending Category</p>
                 <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">
-                  {pieData.length > 0 
-                    ? `${[...pieData].sort((a,b) => b.value - a.value)[0].name} — ₹${[...pieData].sort((a,b) => b.value - a.value)[0].value.toLocaleString('en-IN')}` 
+                  {pieData.length > 0
+                    ? `${[...pieData].sort((a, b) => b.value - a.value)[0].name} — ₹${[...pieData].sort((a, b) => b.value - a.value)[0].value.toLocaleString('en-IN')}`
                     : 'None'}
                 </h4>
               </div>
@@ -391,11 +391,11 @@ const Dashboard = () => {
               <p className="text-indigo-100 text-xs mt-1">Goal: ₹20,000</p>
               <p className="text-white text-lg font-bold mt-2">₹{stats.balance.toLocaleString('en-IN')}</p>
               <div className="w-full h-1.5 bg-indigo-400/50 rounded-full mt-4">
-                <motion.div 
+                <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min((stats.balance / 20000) * 100, 100)}%` }}
                   transition={{ duration: 1, ease: 'easeOut' }}
-                  className="h-full bg-white rounded-full" 
+                  className="h-full bg-white rounded-full"
                 />
               </div>
             </div>
