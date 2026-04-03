@@ -4,20 +4,23 @@ import {
   Sun, 
   Moon, 
   Bell, 
-  User, 
   ChevronDown, 
   Check, 
   LogOut, 
-  Menu
+  Menu,
+  ShieldOff
 } from 'lucide-react';
 import { useTheme } from './ThemeContext';
+import useAppStore from '../store/useAppStore';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Header = ({ setIsMobileMenuOpen }) => {
-  const { theme, toggleTheme, role, setRole } = useTheme();
+  const { theme, toggleTheme } = useTheme();
+  const { role, setRole } = useAppStore();
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
-  const roles = ['Admin', 'Viewer', 'Editor'];
+  const roles = ['Admin', 'Viewer'];
+  const isViewer = role === 'Viewer';
 
   return (
     <header className="h-20 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-30 px-6">
@@ -40,7 +43,22 @@ const Header = ({ setIsMobileMenuOpen }) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* View Only Badge */}
+          <AnimatePresence>
+            {isViewer && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, x: 10 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.8, x: 10 }}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold border border-amber-200 dark:border-amber-800/50"
+              >
+                <ShieldOff size={12} strokeWidth={2.5} />
+                View Only
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Theme Toggle */}
           <motion.button 
             whileTap={{ scale: 0.95 }}
@@ -64,9 +82,18 @@ const Header = ({ setIsMobileMenuOpen }) => {
             <motion.button 
               whileTap={{ scale: 0.98 }}
               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all text-sm font-medium text-zinc-900 dark:text-zinc-100 shadow-sm"
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border transition-all text-sm font-medium text-zinc-900 dark:text-zinc-100 shadow-sm
+                ${isViewer
+                  ? 'border-amber-300 dark:border-amber-700/60 hover:border-amber-400'
+                  : 'border-zinc-200 dark:border-zinc-800 hover:border-indigo-300 dark:hover:border-indigo-800'
+                }`}
             >
-              <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 flex items-center justify-center text-[10px] font-bold">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold
+                ${isViewer
+                  ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400'
+                  : 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400'
+                }`}
+              >
                 {role[0]}
               </div>
               <span className="hidden md:inline">{role}</span>
@@ -84,7 +111,7 @@ const Header = ({ setIsMobileMenuOpen }) => {
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl z-50 overflow-hidden py-1.5"
+                    className="absolute right-0 mt-2 w-52 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl z-50 overflow-hidden py-1.5"
                   >
                     <div className="px-3 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
                       Switch Role
@@ -96,14 +123,21 @@ const Header = ({ setIsMobileMenuOpen }) => {
                           setRole(r);
                           setIsRoleDropdownOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors
+                        className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors
                           ${role === r 
                             ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-medium' 
                             : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'
-                          }
-                        `}
+                          }`}
                       >
-                        {r}
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-1.5 h-1.5 rounded-full ${r === 'Admin' ? 'bg-indigo-500' : 'bg-amber-500'}`} />
+                          {r}
+                          {r === 'Viewer' && (
+                            <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded">
+                              Read
+                            </span>
+                          )}
+                        </div>
                         {role === r && <Check size={14} className="text-indigo-600 dark:text-indigo-400" />}
                       </button>
                     ))}
