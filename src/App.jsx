@@ -6,6 +6,7 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Transactions from './components/Transactions';
 import Insights from './components/Insights';
+import Settings from './components/Settings';
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -20,6 +21,7 @@ function App() {
     switch (activeView) {
       case 'transactions': return <Transactions />;
       case 'insights':     return <Insights />;
+      case 'settings':     return <Settings />;
       case 'dashboard':
       default:             return <Dashboard />;
     }

@@ -21,7 +21,7 @@ const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen, activeView, setActiveV
     { id: 'settings',      title: 'Settings',      icon: <Settings className="w-5 h-5" /> },
   ];
 
-  const ROUTED_VIEWS = ['dashboard', 'transactions', 'insights'];
+  const ROUTED_VIEWS = ['dashboard', 'transactions', 'insights', 'settings'];
 
   const handleNavClick = (item) => {
     if (ROUTED_VIEWS.includes(item.id)) {
