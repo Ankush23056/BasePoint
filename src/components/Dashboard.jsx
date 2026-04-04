@@ -281,48 +281,63 @@ const Dashboard = () => {
         {/* Spending Category Donut Chart */}
         <motion.div variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1 } }} className="card flex flex-col">
           <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100 mb-8">Spending by Category</h3>
-          <div className="flex-1 w-full flex items-center justify-center relative min-h-[250px] sm:min-h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData} cx="50%" cy="50%"
-                  innerRadius="65%" outerRadius="90%"
-                  paddingAngle={5} dataKey="value"
-                  activeIndex={activePieIndex} activeShape={renderActiveShape}
-                  onMouseEnter={(_, index) => setActivePieIndex(index)}
-                  onMouseLeave={() => setActivePieIndex(null)}
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} style={{ outline: 'none', cursor: 'pointer' }} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
-              <div className="text-center transition-all">
-                <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest opacity-80">
-                  {activePieIndex !== null ? pieData[activePieIndex]?.name : 'Overall'}
-                </p>
-                <p className="text-2xl font-black text-zinc-900 dark:text-zinc-100 tracking-tighter">
-                  ₹{activePieIndex !== null ? pieData[activePieIndex]?.value.toLocaleString('en-IN') : stats.expenses.toLocaleString('en-IN')}
-                </p>
+
+          {pieData.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center gap-4 min-h-[250px]">
+              <div className="w-20 h-20 rounded-3xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                <PieIcon size={36} className="text-zinc-300 dark:text-zinc-600" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">No Expense Data</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Add expense transactions to see spending categories.</p>
               </div>
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-x-2 gap-y-4 mt-6">
-            {pieData.map((item, idx) => (
-              <div
-                key={item.name}
-                className={`flex items-center gap-2 cursor-pointer transition-opacity duration-200 ${activePieIndex !== null && activePieIndex !== idx ? 'opacity-30' : 'opacity-100 hover:opacity-80'}`}
-                onMouseEnter={() => setActivePieIndex(idx)}
-                onMouseLeave={() => setActivePieIndex(null)}
-              >
-                <div className="w-3 h-3 rounded-md shadow-sm shrink-0" style={{ backgroundColor: item.color }} />
-                <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300 capitalize truncate">{item.name}</span>
+          ) : (
+            <>
+              <div className="flex-1 w-full flex items-center justify-center relative min-h-[250px] sm:min-h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData} cx="50%" cy="50%"
+                      innerRadius="65%" outerRadius="90%"
+                      paddingAngle={5} dataKey="value"
+                      activeIndex={activePieIndex} activeShape={renderActiveShape}
+                      onMouseEnter={(_, index) => setActivePieIndex(index)}
+                      onMouseLeave={() => setActivePieIndex(null)}
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} style={{ outline: 'none', cursor: 'pointer' }} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
+                  <div className="text-center transition-all">
+                    <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest opacity-80">
+                      {activePieIndex !== null ? pieData[activePieIndex]?.name : 'Overall'}
+                    </p>
+                    <p className="text-2xl font-black text-zinc-900 dark:text-zinc-100 tracking-tighter">
+                      ₹{activePieIndex !== null ? pieData[activePieIndex]?.value.toLocaleString('en-IN') : stats.expenses.toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
+              <div className="grid grid-cols-2 gap-x-2 gap-y-4 mt-6">
+                {pieData.map((item, idx) => (
+                  <div
+                    key={item.name}
+                    className={`flex items-center gap-2 cursor-pointer transition-opacity duration-200 ${activePieIndex !== null && activePieIndex !== idx ? 'opacity-30' : 'opacity-100 hover:opacity-80'}`}
+                    onMouseEnter={() => setActivePieIndex(idx)}
+                    onMouseLeave={() => setActivePieIndex(null)}
+                  >
+                    <div className="w-3 h-3 rounded-md shadow-sm shrink-0" style={{ backgroundColor: item.color }} />
+                    <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300 capitalize truncate">{item.name}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </motion.div>
       </div>
 
@@ -337,9 +352,18 @@ const Dashboard = () => {
             </button>
           </div>
           <div className="space-y-1">
-            {transactions.slice(0, 5).map(tx => (
-              <TransactionItem key={tx.id} {...tx} />
-            ))}
+            {transactions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                  <ArrowRight size={28} className="text-zinc-300 dark:text-zinc-600" />
+                </div>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center">No transactions yet. Add one to get started.</p>
+              </div>
+            ) : (
+              transactions.slice(0, 5).map(tx => (
+                <TransactionItem key={tx.id} {...tx} />
+              ))
+            )}
           </div>
         </motion.div>
 

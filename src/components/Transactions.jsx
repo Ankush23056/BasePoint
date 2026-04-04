@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import {
   Search, Filter, Trash2, Plus, FileX, Edit3,
-  TrendingUp, TrendingDown, ArrowUpDown, ChevronDown
+  TrendingUp, TrendingDown, ArrowUpDown, ChevronDown, Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from './Toast';
 import useAppStore from '../store/useAppStore';
 import AddTransactionModal from './AddTransactionModal';
+import { exportToCSV } from '../utils/exportCsv';
 
 const CATEGORY_COLORS = {
   Bills: '#4F46E5',
@@ -224,6 +225,17 @@ const Transactions = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={() => exportToCSV(filteredTransactions, 'basepoint-transactions')}
+            disabled={filteredTransactions.length === 0}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-indigo-400 dark:hover:border-indigo-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Export visible transactions to CSV"
+          >
+            <Download size={16} strokeWidth={2.5} />
+            Export CSV
+          </motion.button>
+
           {!isViewer && (
             <motion.button
               whileTap={{ scale: 0.97 }}

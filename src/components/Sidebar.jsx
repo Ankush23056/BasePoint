@@ -21,8 +21,10 @@ const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen, activeView, setActiveV
     { id: 'settings',      title: 'Settings',      icon: <Settings className="w-5 h-5" /> },
   ];
 
+  const ROUTED_VIEWS = ['dashboard', 'transactions', 'insights'];
+
   const handleNavClick = (item) => {
-    if (item.id === 'dashboard' || item.id === 'transactions') {
+    if (ROUTED_VIEWS.includes(item.id)) {
       setActiveView(item.id);
       setIsMobileMenuOpen(false);
     } else {
