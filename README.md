@@ -1,5 +1,9 @@
 # 🚀 BasePoint | Modern Finance Dashboard
 
+🔗 **Live Demo:** [https://basepoiint.netlify.app/](https://basepoiint.netlify.app/)
+
+💻 **Github:** [https://github.com/Ankush23056/BasePoint.git](https://github.com/Ankush23056/BasePoint.git)
+
 BasePoint is a high-density, professional finance management interface built to help users track transactions, visualize spending patterns, and gain actionable financial insights.
 
 Designed with a "Modern Fintech" aesthetic, it features a custom Obsidian Frost theme, real-time data reactivity, and a simulated Role-Based Access Control (RBAC) system.
@@ -88,3 +92,6 @@ This project was built to demonstrate:
 - **UX/UI Polish:** Extreme attention to detail, including comprehensive empty states when no data is present, fluid route transitions, and flawless responsive breakpoints from ultra-wide desktops down to mobile devices.
 
 ---
+
+## 👤 Author
+**Ankush Kumar** | Frontend Developer Intern
