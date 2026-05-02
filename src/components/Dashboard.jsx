@@ -3,21 +3,16 @@ import ReactDOM from 'react-dom';
 import {
   TrendingUp,
   TrendingDown,
-  ArrowUpRight,
-  ArrowDownRight,
   Plus,
   ArrowRight,
   PieChart as PieIcon,
   Search,
   MoreVertical,
-  IndianRupee,
   ShieldAlert,
-  ShieldCheck,
   Trophy,
   Trash2,
   Target,
-  X,
-  Zap
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -476,13 +471,8 @@ const Dashboard = () => {
       }
     });
 
-    // Convert monthly deltas into a running cumulative balance
-    let running = 0;
-    monthSlots.forEach(slot => {
-      running += slot.value;
-      slot.value = Math.max(running, 0);
-    });
-
+    // Just return the raw deltas for the month per the user's request
+    // "If a month has no data, it must show 0 rather than maintaining the previous month's value."
     return monthSlots;
   }, [transactions]);
 
@@ -607,8 +597,8 @@ const Dashboard = () => {
                   <TrendingUp size={28} className="text-zinc-300 dark:text-zinc-600" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">No Balance History</p>
-                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Add transactions to start tracking your balance trend.</p>
+                  <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">No data yet</p>
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Add a transaction to get started.</p>
                 </div>
               </div>
             ) : (
@@ -840,7 +830,8 @@ const Dashboard = () => {
                 <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
                   <ArrowRight size={28} className="text-zinc-300 dark:text-zinc-600" />
                 </div>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center">No transactions yet. Add one to get started.</p>
+                <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300 mt-2 text-center">No data yet</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 text-center">Add a transaction to get started.</p>
               </div>
             ) : (
               transactions.slice(0, 5).map(tx => (

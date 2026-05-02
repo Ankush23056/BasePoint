@@ -46,12 +46,12 @@ const EmptyState = ({ isFiltered }) => (
         </div>
         <div className="text-center">
           <p className="text-base font-bold text-zinc-900 dark:text-zinc-100">
-            {isFiltered ? 'No Results Found' : 'No Transactions Yet'}
+            {isFiltered ? 'No Results Found' : 'No data yet'}
           </p>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 max-w-xs">
             {isFiltered
               ? 'Try adjusting your search or filter to find what you\'re looking for.'
-              : 'Add your first transaction to get started tracking your finances.'}
+              : 'Add a transaction to get started.'}
           </p>
         </div>
       </div>

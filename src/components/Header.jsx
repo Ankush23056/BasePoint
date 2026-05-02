@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
 import { 
-  Search, 
   Sun, 
   Moon, 
-  Bell, 
   ChevronDown, 
   Check, 
-  LogOut, 
   Menu,
   ShieldOff
 } from 'lucide-react';
