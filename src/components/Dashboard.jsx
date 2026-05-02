@@ -342,7 +342,7 @@ const Dashboard = () => {
   const stats = useMemo(() => {
     const income = transactions.reduce((acc, curr) => curr.isPositive ? acc + curr.amount : acc, 0);
     const expenses = transactions.reduce((acc, curr) => !curr.isPositive ? acc + curr.amount : acc, 0);
-    const startingBalance = 10000;
+    const startingBalance = 0;
     return { balance: startingBalance + income - expenses, income, expenses };
   }, [transactions]);
 
@@ -428,15 +428,21 @@ const Dashboard = () => {
   }, [transactions]);
 
   const lineData = useMemo(() => {
-    const historical = [
-      { name: 'Oct', value: 8500 },
-      { name: 'Nov', value: 38000 },
-      { name: 'Dec', value: 23500 },
-      { name: 'Jan', value: 16000 },
-      { name: 'Feb', value: 33000 },
-    ];
-    return [...historical, { name: 'Mar', value: Math.max(stats.balance, 0) }];
-  }, [stats.balance]);
+    if (transactions.length === 0) return [];
+    
+    const months = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({ name: d.toLocaleDateString('en-IN', { month: 'short' }), value: 0 });
+    }
+    
+    // Set the latest month's value to current balance
+    // Historical values are kept at 0 or scaled if desired, but here we just
+    // ensure the current balance is properly reflected at the end of the chart.
+    months[5].value = Math.max(stats.balance, 0);
+    return months;
+  }, [stats.balance, transactions]);
 
   const handleAdd = (newTx) => {
     addTransaction(newTx);
@@ -473,7 +479,7 @@ const Dashboard = () => {
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={() => setIsModalOpen(true)}
-              className="btn-primary flex items-center gap-2"
+              className="btn-primary hidden sm:flex items-center gap-2"
             >
               <Plus size={20} />
               Add Transaction
@@ -552,22 +558,34 @@ const Dashboard = () => {
               <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">Balance</span>
             </div>
           </div>
-          <div className="flex-1 w-full h-[250px] sm:h-[300px] lg:h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={lineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#E5E7EB" opacity={0.6} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }} tickFormatter={(val) => `₹${val / 1000}k`} />
-                <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#6366F1', strokeWidth: 1.5, strokeDasharray: '4 4' }} />
-                <Area type="monotone" dataKey="value" stroke="#4F46E5" strokeWidth={3} fillOpacity={1} fill="url(#colorBalance)" dot={{ r: 5, fill: '#4F46E5', strokeWidth: 2, stroke: '#ffffff' }} activeDot={{ r: 7, fill: '#4F46E5', strokeWidth: 3, stroke: '#ffffff' }} />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="flex-1 w-full h-[250px] sm:h-[300px] lg:h-[350px] min-w-0">
+            {transactions.length === 0 ? (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-zinc-50 dark:bg-zinc-800/20 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                  <TrendingUp size={28} className="text-zinc-300 dark:text-zinc-600" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">No Balance History</p>
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Add transactions to start tracking your balance trend.</p>
+                </div>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={lineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#E5E7EB" opacity={0.6} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }} tickFormatter={(val) => `₹${val / 1000}k`} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#6366F1', strokeWidth: 1.5, strokeDasharray: '4 4' }} />
+                  <Area type="monotone" dataKey="value" stroke="#4F46E5" strokeWidth={3} fillOpacity={1} fill="url(#colorBalance)" dot={{ r: 5, fill: '#4F46E5', strokeWidth: 2, stroke: '#ffffff' }} activeDot={{ r: 7, fill: '#4F46E5', strokeWidth: 3, stroke: '#ffffff' }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </motion.div>
 
@@ -871,6 +889,18 @@ const Dashboard = () => {
         onClose={() => setIsGoalModalOpen(false)} 
         onAdd={addGoal} 
       />
+
+      {/* Floating Action Button (FAB) for mobile thumb access */}
+      {!isViewer && (
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsModalOpen(true)}
+          className="fixed bottom-6 right-6 z-40 w-16 h-16 bg-indigo-600 text-white rounded-full shadow-2xl shadow-indigo-600/40 flex sm:hidden items-center justify-center hover:bg-indigo-700 transition-colors"
+        >
+          <Plus size={32} strokeWidth={2.5} />
+        </motion.button>
+      )}
     </motion.div>
   );
 };

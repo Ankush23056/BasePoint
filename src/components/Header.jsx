@@ -32,15 +32,6 @@ const Header = ({ setIsMobileMenuOpen }) => {
           >
             <Menu size={20} />
           </button>
-
-          <div className="relative max-w-md w-full hidden sm:block group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-indigo-500 transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Search anything..." 
-              className="w-full bg-zinc-100 dark:bg-zinc-800 border-transparent focus:border-indigo-500 focus:ring-0 rounded-xl py-2 pl-10 pr-4 text-sm transition-all dark:text-zinc-200 focus:bg-white dark:focus:bg-zinc-950 border border-zinc-200/50 dark:border-zinc-700/50"
-            />
-          </div>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
@@ -68,14 +59,6 @@ const Header = ({ setIsMobileMenuOpen }) => {
             {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
           </motion.button>
 
-          {/* Notifications */}
-          <button 
-            onClick={() => alert('No new notifications!')}
-            className="p-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 relative group transition-colors"
-          >
-            <Bell size={20} />
-            <span className="absolute top-2.5 right-3 w-2 h-2 bg-indigo-600 rounded-full border-2 border-white dark:border-zinc-900 shadow-sm" />
-          </button>
 
           {/* Role Switcher */}
           <div className="relative">
@@ -141,11 +124,6 @@ const Header = ({ setIsMobileMenuOpen }) => {
                         {role === r && <Check size={14} className="text-indigo-600 dark:text-indigo-400" />}
                       </button>
                     ))}
-                    <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1.5" />
-                    <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
-                      <LogOut size={16} />
-                      Log out
-                    </button>
                   </motion.div>
                 </>
               )}
