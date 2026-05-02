@@ -12,6 +12,7 @@ import {
   Trophy,
   Trash2,
   Target,
+  Zap,
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
