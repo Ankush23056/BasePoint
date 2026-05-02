@@ -384,6 +384,9 @@ const Dashboard = () => {
   }, [transactions]);
 
   const spendingPowerStats = useMemo(() => {
+    // If no transactions exist, all spending metrics should be 0
+    if (transactions.length === 0) return { totalBudget: 0, dailyPower: 0 };
+
     const totalBudget = Object.values(categoryBudgets).reduce((acc, val) => acc + val, 0);
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -446,20 +449,42 @@ const Dashboard = () => {
 
   const lineData = useMemo(() => {
     if (transactions.length === 0) return [];
-    
-    const months = [];
+
     const now = new Date();
+    // Build last 6 months as {year, month} slots
+    const monthSlots = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push({ name: d.toLocaleDateString('en-IN', { month: 'short' }), value: 0 });
+      monthSlots.push({
+        year: d.getFullYear(),
+        month: d.getMonth(),
+        name: d.toLocaleString('en-US', { month: 'short' }), // 'Jan', 'Feb', etc. — uses en-US for reliable 3-letter short names
+        value: 0,
+      });
     }
-    
-    // Set the latest month's value to current balance
-    // Historical values are kept at 0 or scaled if desired, but here we just
-    // ensure the current balance is properly reflected at the end of the chart.
-    months[5].value = Math.max(stats.balance, 0);
-    return months;
-  }, [stats.balance, transactions]);
+
+    // Accumulate real income - expenses per month from actual transactions
+    transactions.forEach(t => {
+      try {
+        const d = new Date(t.date);
+        const slot = monthSlots.find(s => s.year === d.getFullYear() && s.month === d.getMonth());
+        if (slot) {
+          slot.value += t.isPositive ? t.amount : -t.amount;
+        }
+      } catch {
+        // ignore malformed dates
+      }
+    });
+
+    // Convert monthly deltas into a running cumulative balance
+    let running = 0;
+    monthSlots.forEach(slot => {
+      running += slot.value;
+      slot.value = Math.max(running, 0);
+    });
+
+    return monthSlots;
+  }, [transactions]);
 
   const handleAdd = (newTx) => {
     addTransaction(newTx);
