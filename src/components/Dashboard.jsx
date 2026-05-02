@@ -9,7 +9,9 @@ import {
   PieChart as PieIcon,
   Search,
   MoreVertical,
-  IndianRupee
+  IndianRupee,
+  ShieldAlert,
+  ShieldCheck
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import {
@@ -126,7 +128,7 @@ const CustomTooltip = ({ active, payload }) => {
 };
 
 const Dashboard = () => {
-  const { transactions, addTransaction, role } = useAppStore();
+  const { transactions, addTransaction, role, categoryBudgets } = useAppStore();
   const { showToast } = useToast();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -151,6 +153,17 @@ const Dashboard = () => {
     return Object.entries(categories).map(([name, value]) => ({
       name, value, color: CATEGORY_COLORS[name] || '#94a3b8'
     }));
+  }, [transactions]);
+
+  // Per-category total spend from expense transactions
+  const categorySpend = useMemo(() => {
+    const acc = {};
+    transactions.forEach(t => {
+      if (!t.isPositive) {
+        acc[t.category] = (acc[t.category] || 0) + t.amount;
+      }
+    });
+    return acc;
   }, [transactions]);
 
   const lineData = useMemo(() => {
@@ -340,6 +353,96 @@ const Dashboard = () => {
           )}
         </motion.div>
       </div>
+
+      {/* ── Budget Guardrails ───────────────────────────────── */}
+      <motion.div
+        variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+        className="card"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <ShieldAlert size={20} className="text-indigo-500" />
+              Budget Guardrails
+            </h3>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">Monthly spend vs. your set limit</p>
+          </div>
+          <span className="text-xs font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">This Month</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+          {Object.entries(categoryBudgets)
+            .filter(([, budget]) => budget > 0)
+            .map(([category, budget]) => {
+              const spent = categorySpend[category] || 0;
+              const pct = budget > 0 ? (spent / budget) * 100 : 0;
+              const clampedPct = Math.min(pct, 100);
+              const pctRounded = Math.round(pct);
+
+              // Conditional colour logic — spec: 100%+ Danger, 80%+ Warning, else Safe
+              let barColor, bgColor, pctColor;
+              if (pct >= 100) {
+                barColor = 'bg-red-600 animate-pulse';
+                bgColor = 'bg-red-50 dark:bg-red-900/20';
+                pctColor = 'text-red-500 dark:text-red-400';
+              } else if (pct >= 80) {
+                barColor = 'bg-orange-500';
+                bgColor = 'bg-orange-50 dark:bg-orange-900/20';
+                pctColor = 'text-orange-500 dark:text-orange-400';
+              } else {
+                barColor = 'bg-emerald-500';
+                bgColor = 'bg-emerald-50 dark:bg-emerald-900/20';
+                pctColor = 'text-emerald-600 dark:text-emerald-400';
+              }
+
+              return (
+                <div
+                  key={category}
+                  className={`p-4 rounded-2xl border border-transparent ${bgColor} transition-all hover:shadow-md group`}
+                >
+                  {/* Header row — category name + percentage badge */}
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{category}</span>
+                    <span className={`text-xs font-bold tabular-nums ${pctColor}`}>
+                      {pctRounded}%
+                    </span>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-2 overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${clampedPct}%` }}
+                      transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
+                      className={`h-full ${barColor} transition-all duration-500`}
+                    />
+                  </div>
+
+                  {/* Spent / Limit labels */}
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">
+                      Spent: ₹{spent.toLocaleString('en-IN')}
+                    </span>
+                    <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">
+                      Limit: ₹{budget.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+
+                  {/* Over-budget warning */}
+                  {pct >= 100 && (
+                    <motion.p
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-2 text-[10px] font-bold text-red-500 dark:text-red-400 uppercase tracking-wider"
+                    >
+                      ⚠ Over by ₹{(spent - budget).toLocaleString('en-IN')}
+                    </motion.p>
+                  )}
+                </div>
+              );
+            })}
+        </div>
+      </motion.div>
 
       {/* Bottom Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

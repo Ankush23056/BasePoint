@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import { 
   X, 
   IndianRupee, 
@@ -63,7 +64,7 @@ const AddTransactionModal = ({ isOpen, onClose, onAdd }) => {
     }, 600);
   };
 
-  return (
+  return ReactDOM.createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -194,7 +195,8 @@ const AddTransactionModal = ({ isOpen, onClose, onAdd }) => {
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 

@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import {
   User, Mail, Palette, Sun, Moon, Trash2, RotateCcw,
   Shield, Info, ChevronRight, Check, AlertTriangle,
-  Bell, BellOff, CreditCard, Globe, Lock
+  Bell, BellOff, CreditCard, Globe, Lock,
+  Target, X, ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from './ThemeContext';
@@ -115,8 +116,12 @@ const ConfirmDialog = ({ title, message, onConfirm, onCancel, confirmLabel = 'Co
 /* ── Main Settings page ────────────────────────────────────────── */
 const Settings = () => {
   const { theme, toggleTheme } = useTheme();
-  const { role, setRole, transactions, addTransaction, deleteTransaction } = useAppStore();
+  const { role, setRole, transactions, addTransaction, deleteTransaction, categoryBudgets, setCategoryBudget, resetBudgets } = useAppStore();
   const { showToast } = useToast();
+
+  // Budget modal state
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [tempBudgets, setTempBudgets] = useState({});
 
   // Profile state
   const [profileName, setProfileName] = useState('Ankush Kumar');
@@ -155,6 +160,27 @@ const Settings = () => {
     showToast({ type: 'success', title: 'Data Reset', message: 'Transactions restored to default sample data.' });
   };
 
+  const openBudgetModal = () => {
+    setTempBudgets({ ...categoryBudgets });
+    setShowBudgetModal(true);
+  };
+
+  const saveBudgets = () => {
+    Object.entries(tempBudgets).forEach(([cat, val]) => {
+      const num = parseFloat(val);
+      if (!isNaN(num) && num >= 0) setCategoryBudget(cat, num);
+    });
+    setShowBudgetModal(false);
+    showToast({ type: 'success', title: 'Budgets Saved', message: 'Your monthly category budgets have been updated.' });
+  };
+
+  const handleResetBudgets = () => {
+    resetBudgets();
+    setTempBudgets({});
+    setShowBudgetModal(false);
+    showToast({ type: 'info', title: 'Budgets Reset', message: 'Category budgets restored to default values.' });
+  };
+
   return (
     <>
       <motion.div
@@ -173,6 +199,28 @@ const Settings = () => {
             Manage your profile, preferences, and data.
           </p>
         </div>
+
+        {/* ── Budget Guardrails ── */}
+        <Section delay={0.03} icon={<ShieldAlert size={18} />} title="Budget Guardrails" description="Set monthly spending limits for each category.">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+            {Object.entries(categoryBudgets)
+              .filter(([, b]) => b > 0)
+              .map(([cat, budget]) => (
+                <div key={cat} className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700">
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-0.5">{cat}</p>
+                  <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">₹{Number(budget).toLocaleString('en-IN')}/mo</p>
+                </div>
+              ))
+            }
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={openBudgetModal}
+            className="btn-primary flex items-center gap-2 text-sm"
+          >
+            <Target size={16} /> Edit Budgets
+          </motion.button>
+        </Section>
 
         {/* ── Profile ── */}
         <Section delay={0.05} icon={<User size={18} />} title="Profile" description="Your personal information displayed in the app.">
@@ -391,6 +439,78 @@ const Settings = () => {
             onConfirm={handleResetData}
             onCancel={() => setShowResetDialog(false)}
           />
+        )}
+
+        {/* ── Edit Budget Modal ── */}
+        {showBudgetModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowBudgetModal(false)} />
+            <motion.div
+              initial={{ scale: 0.92, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.92, y: 20 }}
+              className="relative bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            >
+              {/* Modal header */}
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                    <Target size={20} className="text-indigo-500" /> Edit Monthly Budgets
+                  </h3>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Set ₹0 to hide a category from the dashboard.</p>
+                </div>
+                <button
+                  onClick={() => setShowBudgetModal(false)}
+                  className="p-2 rounded-xl text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Budget input grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                {Object.keys(tempBudgets).map(cat => (
+                  <div key={cat}>
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">{cat}</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-zinc-400">₹</span>
+                      <input
+                        id={`budget-${cat}`}
+                        type="number"
+                        min="0"
+                        step="100"
+                        value={tempBudgets[cat]}
+                        onChange={e => setTempBudgets(prev => ({ ...prev, [cat]: e.target.value }))}
+                        className="w-full pl-7 pr-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 rounded-xl text-sm text-zinc-900 dark:text-zinc-100 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={saveBudgets}
+                  className="btn-primary flex-1 flex items-center justify-center gap-2 py-2.5"
+                >
+                  <Check size={16} /> Save Budgets
+                </motion.button>
+                <button
+                  onClick={handleResetBudgets}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:border-amber-400 dark:hover:border-amber-700 hover:text-amber-600 dark:hover:text-amber-400 transition-all"
+                >
+                  <RotateCcw size={14} /> Defaults
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>

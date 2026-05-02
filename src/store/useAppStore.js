@@ -12,6 +12,17 @@ const INITIAL_TRANSACTIONS = [
   { id: 8, name: 'Netflix', description: 'Monthly streaming subscription', category: 'Entertainment', amount: 649.00, date: '2026-03-15', type: 'Expense', isPositive: false },
 ];
 
+const DEFAULT_BUDGETS = {
+  Bills: 5000,
+  Food: 8000,
+  Shopping: 3000,
+  Entertainment: 2000,
+  Healthcare: 2500,
+  Transport: 2000,
+  Freelance: 0,
+  Other: 1000,
+};
+
 const useAppStore = create(
   persist(
     (set) => ({
@@ -26,6 +37,13 @@ const useAppStore = create(
       editTransaction: (id, updatedFields) => set((state) => ({
         transactions: state.transactions.map(tx => tx.id === id ? { ...tx, ...updatedFields } : tx)
       })),
+
+      // Budget State
+      categoryBudgets: DEFAULT_BUDGETS,
+      setCategoryBudget: (category, amount) => set((state) => ({
+        categoryBudgets: { ...state.categoryBudgets, [category]: Number(amount) }
+      })),
+      resetBudgets: () => set({ categoryBudgets: DEFAULT_BUDGETS }),
     }),
     {
       name: 'basepoint-app-storage',
