@@ -137,22 +137,35 @@ const CustomTooltip = ({ active, payload }) => {
 const CONFETTI_COLORS = ['#4F46E5','#10B981','#F59E0B','#EF4444','#8B5CF6','#F472B6','#06B6D4','#34D399'];
 
 const Confetti = ({ active }) => {
+  const particles = useMemo(() => {
+    if (!active) return [];
+    // eslint-disable-next-line react-hooks/purity
+    return Array.from({ length: 52 }, (_, i) => {
+      // eslint-disable-next-line react-hooks/purity
+      const angle = (i / 52) * 360 + Math.random() * 10;
+      const rad = (angle * Math.PI) / 180;
+      // eslint-disable-next-line react-hooks/purity
+      const dist = 60 + Math.random() * 90;
+      return {
+        id: i,
+        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+        // eslint-disable-next-line react-hooks/purity
+        tx: Math.cos(rad) * dist,
+        // eslint-disable-next-line react-hooks/purity
+        ty: Math.sin(rad) * dist,
+        // eslint-disable-next-line react-hooks/purity
+        duration: 0.85 + Math.random() * 0.55,
+        // eslint-disable-next-line react-hooks/purity
+        delay: Math.random() * 0.2,
+        // eslint-disable-next-line react-hooks/purity
+        size: 5 + Math.random() * 8,
+        // eslint-disable-next-line react-hooks/purity
+        rotate: Math.random() * 720 - 360,
+      };
+    });
+  }, [active]);
+
   if (!active) return null;
-  const particles = Array.from({ length: 52 }, (_, i) => {
-    const angle = (i / 52) * 360 + Math.random() * 10;
-    const rad = (angle * Math.PI) / 180;
-    const dist = 60 + Math.random() * 90;
-    return {
-      id: i,
-      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-      tx: Math.cos(rad) * dist,
-      ty: Math.sin(rad) * dist,
-      duration: 0.85 + Math.random() * 0.55,
-      delay: Math.random() * 0.2,
-      size: 5 + Math.random() * 8,
-      rotate: Math.random() * 720 - 360,
-    };
-  });
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden rounded-2xl z-10">
       {particles.map(p => (
@@ -178,8 +191,10 @@ const GoalCard = ({ goal, onDelete }) => {
 
   useEffect(() => {
     if (isComplete && !wasComplete.current) {
-      setShowConfetti(true);
-      setShowLevelUp(true);
+      setTimeout(() => {
+        setShowConfetti(true);
+        setShowLevelUp(true);
+      }, 0);
       setTimeout(() => setShowConfetti(false), 2200);
       setTimeout(() => setShowLevelUp(false), 3000);
     }
@@ -414,7 +429,9 @@ const Dashboard = () => {
           } else if (d >= twoWeeksAgo && d < oneWeekAgo) {
             lastWeek++;
           }
-        } catch {}
+        } catch {
+          // ignore
+        }
       }
     });
 

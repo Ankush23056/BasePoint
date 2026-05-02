@@ -17,11 +17,10 @@ const CATEGORIES = [
   { name: 'Shopping',      color: '#8B5CF6' },
   { name: 'Entertainment', color: '#F59E0B' },
   { name: 'Healthcare',    color: '#EF4444' },
-  { name: 'Other',         color: '#ab19a4' },
   { name: 'Transport',     color: '#06B6D4' },
-  { name: 'Freelance',     color: '#F472B6' },
   { name: 'Savings',       color: '#3B82F6' },
   { name: 'Investment',    color: '#6366F1' },
+  { name: 'Other',         color: '#ab19a4' },
 ];
 
 const GOAL_CATEGORIES = ['Savings', 'Investment'];
