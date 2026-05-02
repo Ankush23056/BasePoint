@@ -44,6 +44,16 @@ const useAppStore = create(
         categoryBudgets: { ...state.categoryBudgets, [category]: Number(amount) }
       })),
       resetBudgets: () => set({ categoryBudgets: DEFAULT_BUDGETS }),
+
+      // Goals State
+      goals: [],
+      addGoal: (goal) => set((state) => ({ goals: [goal, ...state.goals] })),
+      deleteGoal: (id) => set((state) => ({ goals: state.goals.filter(g => g.id !== id) })),
+      contributeToGoal: (id, amount) => set((state) => ({
+        goals: state.goals.map(g =>
+          String(g.id) === String(id) ? { ...g, currentAmount: g.currentAmount + Number(amount) } : g
+        )
+      })),
     }),
     {
       name: 'basepoint-app-storage',

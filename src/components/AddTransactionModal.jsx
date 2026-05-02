@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
+import useAppStore from '../store/useAppStore';
 import { 
   X, 
   IndianRupee, 
@@ -19,20 +20,28 @@ const CATEGORIES = [
   { name: 'Other',         color: '#ab19a4' },
   { name: 'Transport',     color: '#06B6D4' },
   { name: 'Freelance',     color: '#F472B6' },
+  { name: 'Savings',       color: '#3B82F6' },
+  { name: 'Investment',    color: '#6366F1' },
 ];
 
+const GOAL_CATEGORIES = ['Savings', 'Investment'];
+
 const AddTransactionModal = ({ isOpen, onClose, onAdd }) => {
-  const [amount,      setAmount]      = useState('');
-  const [description, setDescription] = useState('');
-  const [category,    setCategory]    = useState('Bills');
-  const [type,        setType]        = useState('Expense');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { goals, contributeToGoal } = useAppStore();
+
+  const [amount,        setAmount]        = useState('');
+  const [description,   setDescription]   = useState('');
+  const [category,      setCategory]      = useState('Bills');
+  const [type,          setType]          = useState('Expense');
+  const [isSubmitting,  setIsSubmitting]  = useState(false);
+  const [selectedGoalId, setSelectedGoalId] = useState('');
 
   const handleClose = () => {
     setAmount('');
     setDescription('');
     setCategory('Bills');
     setType('Expense');
+    setSelectedGoalId('');
     onClose();
   };
 
@@ -45,20 +54,27 @@ const AddTransactionModal = ({ isOpen, onClose, onAdd }) => {
     // Simulate brief API delay for premium feel
     setTimeout(() => {
       const name = description.trim() || `${category} Transaction`;
+      const parsedAmount = parseFloat(amount);
       onAdd({
         id: Date.now(),
         name,
         description: description.trim(),
         category,
-        amount: parseFloat(amount),
-        date: new Date().toISOString().split('T')[0],   // ISO format for consistent parsing
+        amount: parsedAmount,
+        date: new Date().toISOString().split('T')[0],
         type,
         isPositive: type === 'Income',
+        goalId: selectedGoalId || null,
       });
+      // Auto-contribute to linked goal
+      if (selectedGoalId && GOAL_CATEGORIES.includes(category)) {
+        contributeToGoal(selectedGoalId, parsedAmount);
+      }
       setAmount('');
       setDescription('');
       setCategory('Bills');
       setType('Expense');
+      setSelectedGoalId('');
       setIsSubmitting(false);
       onClose();
     }, 600);
@@ -172,6 +188,34 @@ const AddTransactionModal = ({ isOpen, onClose, onAdd }) => {
                   ))}
                 </div>
               </div>
+
+              {/* Goal Selector — shown only for Savings / Investment */}
+              <AnimatePresence>
+                {GOAL_CATEGORIES.includes(category) && goals.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-2 overflow-hidden"
+                  >
+                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1">
+                      🎯 Link to Goal <span className="font-normal normal-case">(optional)</span>
+                    </label>
+                    <select
+                      value={selectedGoalId}
+                      onChange={e => setSelectedGoalId(e.target.value)}
+                      className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-3 px-4 text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+                    >
+                      <option value="">— No goal —</option>
+                      {goals.map(g => (
+                        <option key={g.id} value={g.id}>
+                          {g.emoji} {g.name} (₹{g.currentAmount.toLocaleString('en-IN')} / ₹{g.targetAmount.toLocaleString('en-IN')})
+                        </option>
+                      ))}
+                    </select>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <motion.button 
                 whileTap={{ scale: 0.98 }}

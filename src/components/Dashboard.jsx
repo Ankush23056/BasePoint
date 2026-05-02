@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import {
   TrendingUp,
   TrendingDown,
@@ -11,9 +12,13 @@ import {
   MoreVertical,
   IndianRupee,
   ShieldAlert,
-  ShieldCheck
+  ShieldCheck,
+  Trophy,
+  Trash2,
+  Target,
+  X
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   AreaChart,
   Area,
@@ -127,11 +132,208 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
+/* ── Confetti burst ─────────────────────────────────────────────── */
+const CONFETTI_COLORS = ['#4F46E5','#10B981','#F59E0B','#EF4444','#8B5CF6','#F472B6','#06B6D4','#34D399'];
+
+const Confetti = ({ active }) => {
+  if (!active) return null;
+  const particles = Array.from({ length: 52 }, (_, i) => {
+    const angle = (i / 52) * 360 + Math.random() * 10;
+    const rad = (angle * Math.PI) / 180;
+    const dist = 60 + Math.random() * 90;
+    return {
+      id: i,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      tx: Math.cos(rad) * dist,
+      ty: Math.sin(rad) * dist,
+      duration: 0.85 + Math.random() * 0.55,
+      delay: Math.random() * 0.2,
+      size: 5 + Math.random() * 8,
+      rotate: Math.random() * 720 - 360,
+    };
+  });
+  return (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden rounded-2xl z-10">
+      {particles.map(p => (
+        <motion.div
+          key={p.id}
+          initial={{ x: 0, y: 0, opacity: 1, scale: 1, rotate: 0 }}
+          animate={{ x: p.tx, y: p.ty, opacity: 0, scale: 0.2, rotate: p.rotate }}
+          transition={{ duration: p.duration, delay: p.delay, ease: 'easeOut' }}
+          style={{ position: 'absolute', width: p.size, height: p.size * 0.45, borderRadius: 2, backgroundColor: p.color }}
+        />
+      ))}
+    </div>
+  );
+};
+
+/* ── Goal card ──────────────────────────────────────────────────── */
+const GoalCard = ({ goal, onDelete }) => {
+  const pct = goal.targetAmount > 0 ? Math.min((goal.currentAmount / goal.targetAmount) * 100, 100) : 0;
+  const isComplete = pct >= 100;
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const wasComplete = useRef(false);
+
+  useEffect(() => {
+    if (isComplete && !wasComplete.current) {
+      setShowConfetti(true);
+      setShowLevelUp(true);
+      setTimeout(() => setShowConfetti(false), 2200);
+      setTimeout(() => setShowLevelUp(false), 3000);
+    }
+    wasComplete.current = isComplete;
+  }, [isComplete]);
+
+  return (
+    <motion.div
+      variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1 } }}
+      whileHover={{ y: -4 }}
+      className={`relative card overflow-hidden transition-all ${isComplete ? 'ring-2 ring-emerald-400 dark:ring-emerald-500' : ''}`}
+    >
+      <Confetti active={showConfetti} />
+
+      <AnimatePresence>
+        {showLevelUp && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.2 }}
+            className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-emerald-500/95 dark:bg-emerald-600/95 rounded-2xl backdrop-blur-sm"
+          >
+            <motion.div
+              animate={{ rotate: [0, -15, 15, -10, 10, 0], scale: [1, 1.4, 1.4, 1.4, 1.4, 1] }}
+              transition={{ duration: 0.7 }}
+              className="text-5xl mb-3"
+            >🏆</motion.div>
+            <p className="text-white font-black text-xl tracking-tight">Goal Achieved!</p>
+            <p className="text-emerald-100 text-sm mt-1 font-medium">Level Up! 🎉</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">{goal.emoji}</span>
+          <div>
+            <h4 className="font-bold text-zinc-900 dark:text-zinc-100">{goal.name}</h4>
+            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">Target: ₹{goal.targetAmount.toLocaleString('en-IN')}</p>
+          </div>
+        </div>
+        <button
+          onClick={() => onDelete(goal.id)}
+          className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all"
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
+            ₹{goal.currentAmount.toLocaleString('en-IN')}
+          </span>
+          <span className={`text-xs font-bold tabular-nums ${isComplete ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500'}`}>
+            {Math.round(pct)}%
+          </span>
+        </div>
+        <div className="w-full h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${pct}%` }}
+            transition={{ duration: 1.1, ease: 'easeOut' }}
+            className={`h-full rounded-full ${isComplete ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+          />
+        </div>
+        <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">
+          {isComplete ? '🎉 Fully funded!' : `₹${(goal.targetAmount - goal.currentAmount).toLocaleString('en-IN')} remaining`}
+        </p>
+      </div>
+    </motion.div>
+  );
+};
+
+/* ── Add Goal modal (portal) ────────────────────────────────────── */
+const GOAL_EMOJIS = ['🎯','🏠','✈️','🚗','📱','💻','🎓','💍','🏋️','🌴','🏦','💰','🛡️','🎮','📚','🏕️'];
+
+const AddGoalModal = ({ isOpen, onClose, onAdd }) => {
+  const [name, setName] = useState('');
+  const [target, setTarget] = useState('');
+  const [emoji, setEmoji] = useState('🎯');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!name.trim() || !target || parseFloat(target) <= 0) return;
+    onAdd({ id: Date.now(), name: name.trim(), targetAmount: parseFloat(target), currentAmount: 0, emoji, createdAt: new Date().toISOString() });
+    setName(''); setTarget(''); setEmoji('🎯');
+    onClose();
+  };
+
+  return ReactDOM.createPortal(
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={onClose} className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-[100]" />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl z-[101] overflow-hidden"
+          >
+            <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-800/30">
+              <div>
+                <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                  <Trophy size={20} className="text-amber-500" /> New Savings Goal
+                </h3>
+                <p className="text-xs text-zinc-500 mt-1 font-medium">Set a target and track your progress.</p>
+              </div>
+              <button onClick={onClose} className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition-colors">
+                <X size={20} className="text-zinc-500" />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1">Choose Icon</label>
+                <div className="flex flex-wrap gap-2">
+                  {GOAL_EMOJIS.map(e => (
+                    <button key={e} type="button" onClick={() => setEmoji(e)}
+                      className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all ${emoji === e ? 'bg-indigo-100 dark:bg-indigo-900/40 ring-2 ring-indigo-500 scale-110' : 'bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}>
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1">Goal Name</label>
+                <input value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Emergency Fund, Dream Vacation…"
+                  className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-3 px-4 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all dark:text-white placeholder:text-zinc-400" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1">Target Amount</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-semibold text-sm">₹</span>
+                  <input type="number" min="1" required value={target} onChange={e => setTarget(e.target.value)} placeholder="50,000"
+                    className="w-full pl-8 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all dark:text-white placeholder:text-zinc-400" />
+                </div>
+              </div>
+              <motion.button whileTap={{ scale: 0.97 }} type="submit" className="w-full btn-primary py-3.5 flex items-center justify-center gap-2 font-bold">
+                <Target size={18} /> Create Goal
+              </motion.button>
+            </form>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>,
+    document.body
+  );
+};
+
 const Dashboard = () => {
-  const { transactions, addTransaction, role, categoryBudgets } = useAppStore();
+
+  const { transactions, addTransaction, role, categoryBudgets, goals, addGoal, deleteGoal } = useAppStore();
   const { showToast } = useToast();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [activePieIndex, setActivePieIndex] = useState(null);
 
   const isViewer = role === 'Viewer';
@@ -444,6 +646,46 @@ const Dashboard = () => {
         </div>
       </motion.div>
 
+      {/* ── Savings Goals ─────────────────────────────────────── */}
+      <motion.div
+        variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+        className="card"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <Trophy size={20} className="text-amber-500" />
+              Savings Goals
+            </h3>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">Track your progress to financial freedom</p>
+          </div>
+          {!isViewer && (
+            <button
+              onClick={() => setIsGoalModalOpen(true)}
+              className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-sm font-bold text-zinc-800 dark:text-zinc-200 rounded-xl transition-all flex items-center gap-2"
+            >
+              <Plus size={16} /> New Goal
+            </button>
+          )}
+        </div>
+
+        {goals.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 px-4 bg-zinc-50 dark:bg-zinc-800/20 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
+            <span className="text-4xl mb-3">🎯</span>
+            <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">No active goals yet.</p>
+            <p className="text-xs text-zinc-500 mt-1 max-w-xs text-center">Set up an emergency fund or plan for a vacation.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+            <AnimatePresence mode="popLayout">
+              {goals.map(goal => (
+                <GoalCard key={goal.id} goal={goal} onDelete={deleteGoal} />
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+      </motion.div>
+
       {/* Bottom Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Transactions */}
@@ -532,6 +774,12 @@ const Dashboard = () => {
           </div>
         </motion.div>
       </div>
+
+      <AddGoalModal 
+        isOpen={isGoalModalOpen} 
+        onClose={() => setIsGoalModalOpen(false)} 
+        onAdd={addGoal} 
+      />
     </motion.div>
   );
 };
