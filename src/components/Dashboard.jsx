@@ -356,15 +356,15 @@ const Dashboard = () => {
   const isViewer = role === 'Viewer';
 
   const stats = useMemo(() => {
-    const income = transactions.reduce((acc, curr) => curr.isPositive ? acc + curr.amount : acc, 0);
-    const expenses = transactions.reduce((acc, curr) => !curr.isPositive ? acc + curr.amount : acc, 0);
-    const startingBalance = 0;
-    return { balance: startingBalance + income - expenses, income, expenses };
+    const txns = transactions || [];
+    const income = txns.reduce((acc, curr) => curr.isPositive ? acc + curr.amount : acc, 0);
+    const expenses = txns.reduce((acc, curr) => !curr.isPositive ? acc + curr.amount : acc, 0);
+    return { balance: income - expenses, income, expenses };
   }, [transactions]);
 
   const pieData = useMemo(() => {
     const categories = {};
-    transactions.forEach(t => {
+    (transactions || []).forEach(t => {
       if (!t.isPositive) {
         categories[t.category] = (categories[t.category] || 0) + t.amount;
       }
@@ -376,7 +376,7 @@ const Dashboard = () => {
 
   const categorySpend = useMemo(() => {
     const acc = {};
-    transactions.forEach(t => {
+    (transactions || []).forEach(t => {
       if (!t.isPositive) {
         acc[t.category] = (acc[t.category] || 0) + t.amount;
       }
@@ -385,13 +385,14 @@ const Dashboard = () => {
   }, [transactions]);
 
   const spendingPowerStats = useMemo(() => {
-
-    const totalBudget = Object.values(categoryBudgets).reduce((acc, val) => acc + val, 0);
+    const txns = transactions || [];
+    const budgets = categoryBudgets || {};
+    const totalBudget = Object.values(budgets).reduce((acc, val) => acc + val, 0);
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    const currentMonthSpend = transactions
+    const currentMonthSpend = txns
       .filter(t => !t.isPositive)
       .filter(t => {
         try {
@@ -404,7 +405,7 @@ const Dashboard = () => {
       .reduce((acc, t) => acc + t.amount, 0);
 
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const daysRemaining = daysInMonth - now.getDate() + 1; // including today
+    const daysRemaining = Math.max(1, daysInMonth - now.getDate() + 1);
 
     const power = (totalBudget - currentMonthSpend) / daysRemaining;
     return {
@@ -415,14 +416,13 @@ const Dashboard = () => {
 
   const impulseStats = useMemo(() => {
     const now = new Date();
-    // Assuming 7 days per week
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
     let thisWeek = 0;
     let lastWeek = 0;
 
-    transactions.forEach(t => {
+    (transactions || []).forEach(t => {
       if (!t.isPositive && t.amount < 500) {
         try {
           const d = new Date(t.date);
@@ -447,7 +447,6 @@ const Dashboard = () => {
   }, [transactions]);
 
   const lineData = useMemo(() => {
-
     const now = new Date();
     // Build last 6 months as {year, month} slots
     const monthSlots = [];
@@ -456,13 +455,13 @@ const Dashboard = () => {
       monthSlots.push({
         year: d.getFullYear(),
         month: d.getMonth(),
-        name: d.toLocaleString('en-US', { month: 'short' }), // 'Jan', 'Feb', etc. — uses en-US for reliable 3-letter short names
+        name: d.toLocaleString('en-US', { month: 'short' }),
         value: 0,
       });
     }
 
     // Accumulate real income - expenses per month from actual transactions
-    transactions.forEach(t => {
+    (transactions || []).forEach(t => {
       try {
         const d = new Date(t.date);
         const slot = monthSlots.find(s => s.year === d.getFullYear() && s.month === d.getMonth());
@@ -474,8 +473,6 @@ const Dashboard = () => {
       }
     });
 
-    // Just return the raw deltas for the month per the user's request
-    // "If a month has no data, it must show 0 rather than maintaining the previous month's value."
     return monthSlots;
   }, [transactions]);
 

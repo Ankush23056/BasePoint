@@ -106,7 +106,7 @@ const ConfirmDialog = ({ title, message, onConfirm, onCancel, confirmLabel = 'Co
 /* ── Main Settings page ────────────────────────────────────────── */
 const Settings = () => {
   const { theme, toggleTheme } = useTheme();
-  const { role, setRole, transactions, addTransaction, deleteTransaction, clearAllTransactions, categoryBudgets, setCategoryBudget, resetBudgets } = useAppStore();
+  const { role, setRole, transactions, addTransaction, clearAllTransactions, categoryBudgets, setCategoryBudget, resetBudgets } = useAppStore();
   const { showToast } = useToast();
 
   // Budget modal state

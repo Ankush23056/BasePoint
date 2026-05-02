@@ -64,7 +64,7 @@ const useAppStore = create(
       version: 5,
       // migrate runs whenever stored version < current version.
       // Returns the fresh sample state so old stale data is wiped.
-      migrate: (_persistedState, _version) => ({
+      migrate: () => ({
         role: 'Admin',
         transactions: SAMPLE_TRANSACTIONS,
         categoryBudgets: DEFAULT_BUDGETS,
