@@ -53,7 +53,16 @@ const useAppStore = create(
     }),
     {
       name: 'basepoint-app-storage',
-      version: 2,
+      version: 3,
+      // Without a migrate function, Zustand IGNORES the version number.
+      // This function runs whenever stored version !== current version.
+      // Returning fresh initial state wipes ALL stale cached data.
+      migrate: (_persistedState, _version) => ({
+        role: 'Admin',
+        transactions: [],
+        categoryBudgets: DEFAULT_BUDGETS,
+        goals: [],
+      }),
     }
   )
 );
