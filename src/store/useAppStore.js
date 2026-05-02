@@ -48,6 +48,7 @@ const useAppStore = create(
     }),
     {
       name: 'basepoint-app-storage',
+      version: 1, // Bumping version clears old cached localstorage data
     }
   )
 );
