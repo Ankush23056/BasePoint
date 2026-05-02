@@ -149,7 +149,7 @@ const Settings = () => {
   };
 
   const handleClearAll = () => {
-    transactions.forEach(tx => deleteTransaction(tx.id));
+    useAppStore.getState().clearAllTransactions();
     setShowClearDialog(false);
     showToast({ type: 'info', title: 'Data Cleared', message: 'All transactions have been removed.' });
   };

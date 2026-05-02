@@ -25,6 +25,7 @@ const useAppStore = create(
       transactions: INITIAL_TRANSACTIONS,
       addTransaction: (newTx) => set((state) => ({ transactions: [newTx, ...state.transactions] })),
       deleteTransaction: (id) => set((state) => ({ transactions: state.transactions.filter(tx => tx.id !== id) })),
+      clearAllTransactions: () => set({ transactions: [] }),
       editTransaction: (id, updatedFields) => set((state) => ({
         transactions: state.transactions.map(tx => tx.id === id ? { ...tx, ...updatedFields } : tx)
       })),
@@ -48,7 +49,7 @@ const useAppStore = create(
     }),
     {
       name: 'basepoint-app-storage',
-      version: 1, // Bumping version clears old cached localstorage data
+      version: 2, // Bumping version clears old cached localstorage data
     }
   )
 );
