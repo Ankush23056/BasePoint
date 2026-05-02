@@ -13,6 +13,7 @@ import {
   Trash2,
   Target,
   Zap,
+  IndianRupee,
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
