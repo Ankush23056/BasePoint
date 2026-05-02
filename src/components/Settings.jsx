@@ -11,17 +11,6 @@ import { useTheme } from './ThemeContext';
 import useAppStore from '../store/useAppStore';
 import { useToast } from './Toast';
 
-const INITIAL_TRANSACTIONS = [
-  { id: 1, name: 'Water Bill', description: 'Monthly water supply bill', category: 'Bills', amount: 42.00, date: '2026-03-30', type: 'Expense', isPositive: false },
-  { id: 2, name: 'Bus Pass', description: 'Monthly transit pass renewal', category: 'Transport', amount: 45.00, date: '2026-03-28', type: 'Expense', isPositive: false },
-  { id: 3, name: 'Pharmacy', description: 'Prescription medicine purchase', category: 'Healthcare', amount: 32.50, date: '2026-03-27', type: 'Expense', isPositive: false },
-  { id: 4, name: 'Freelance Bonus', description: 'UI design project payment', category: 'Freelance', amount: 500.00, date: '2026-03-25', type: 'Income', isPositive: true },
-  { id: 5, name: 'Clothing Store', description: 'Spring wardrobe haul', category: 'Shopping', amount: 210.00, date: '2026-03-24', type: 'Expense', isPositive: false },
-  { id: 6, name: 'Grocery Run', description: 'Weekly groceries from DMart', category: 'Food', amount: 1850.00, date: '2026-03-22', type: 'Expense', isPositive: false },
-  { id: 7, name: 'Salary Credit', description: 'March monthly salary', category: 'Freelance', amount: 45000.00, date: '2026-03-01', type: 'Income', isPositive: true },
-  { id: 8, name: 'Netflix', description: 'Monthly streaming subscription', category: 'Entertainment', amount: 649.00, date: '2026-03-15', type: 'Expense', isPositive: false },
-];
-
 /* ── Section wrapper ───────────────────────────────────────────── */
 const Section = ({ title, description, icon, children, delay = 0 }) => (
   <motion.div
@@ -117,7 +106,7 @@ const ConfirmDialog = ({ title, message, onConfirm, onCancel, confirmLabel = 'Co
 /* ── Main Settings page ────────────────────────────────────────── */
 const Settings = () => {
   const { theme, toggleTheme } = useTheme();
-  const { role, setRole, transactions, addTransaction, deleteTransaction, categoryBudgets, setCategoryBudget, resetBudgets } = useAppStore();
+  const { role, setRole, transactions, addTransaction, deleteTransaction, clearAllTransactions, categoryBudgets, setCategoryBudget, resetBudgets } = useAppStore();
   const { showToast } = useToast();
 
   // Budget modal state
@@ -149,14 +138,26 @@ const Settings = () => {
   };
 
   const handleClearAll = () => {
-    useAppStore.getState().clearAllTransactions();
+    clearAllTransactions();
     setShowClearDialog(false);
     showToast({ type: 'info', title: 'Data Cleared', message: 'All transactions have been removed.' });
   };
 
   const handleResetData = () => {
-    transactions.forEach(tx => deleteTransaction(tx.id));
-    INITIAL_TRANSACTIONS.forEach(tx => addTransaction(tx));
+    // Wipe current transactions then restore the sample set from the store
+    const { SAMPLE_TRANSACTIONS } = useAppStore.getState();
+    clearAllTransactions();
+    const samples = [
+      { id: 1, name: 'Salary Credit', description: 'May monthly salary', category: 'Freelance', amount: 45000.00, date: '2026-05-01', type: 'Income', isPositive: true },
+      { id: 2, name: 'Freelance Bonus', description: 'UI design project payment', category: 'Freelance', amount: 8500.00, date: '2026-05-02', type: 'Income', isPositive: true },
+      { id: 3, name: 'Grocery Run', description: 'Weekly groceries from DMart', category: 'Food', amount: 1850.00, date: '2026-05-02', type: 'Expense', isPositive: false },
+      { id: 4, name: 'Netflix', description: 'Monthly streaming subscription', category: 'Entertainment', amount: 649.00, date: '2026-05-01', type: 'Expense', isPositive: false },
+      { id: 5, name: 'Water Bill', description: 'Monthly water supply bill', category: 'Bills', amount: 420.00, date: '2026-05-01', type: 'Expense', isPositive: false },
+      { id: 6, name: 'Bus Pass', description: 'Monthly transit pass renewal', category: 'Transport', amount: 450.00, date: '2026-04-28', type: 'Expense', isPositive: false },
+      { id: 7, name: 'Pharmacy', description: 'Prescription medicine purchase', category: 'Healthcare', amount: 325.00, date: '2026-04-27', type: 'Expense', isPositive: false },
+      { id: 8, name: 'Clothing Store', description: 'Spring wardrobe haul', category: 'Shopping', amount: 2100.00, date: '2026-04-24', type: 'Expense', isPositive: false },
+    ];
+    samples.forEach(tx => addTransaction(tx));
     setShowResetDialog(false);
     showToast({ type: 'success', title: 'Data Reset', message: 'Transactions restored to default sample data.' });
   };

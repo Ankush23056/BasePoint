@@ -1,7 +1,17 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-const INITIAL_TRANSACTIONS = [];
+// Sample transactions with current month dates (May 2026) so the chart is relevant
+const SAMPLE_TRANSACTIONS = [
+  { id: 1, name: 'Salary Credit', description: 'May monthly salary', category: 'Freelance', amount: 45000.00, date: '2026-05-01', type: 'Income', isPositive: true },
+  { id: 2, name: 'Freelance Bonus', description: 'UI design project payment', category: 'Freelance', amount: 8500.00, date: '2026-05-02', type: 'Income', isPositive: true },
+  { id: 3, name: 'Grocery Run', description: 'Weekly groceries from DMart', category: 'Food', amount: 1850.00, date: '2026-05-02', type: 'Expense', isPositive: false },
+  { id: 4, name: 'Netflix', description: 'Monthly streaming subscription', category: 'Entertainment', amount: 649.00, date: '2026-05-01', type: 'Expense', isPositive: false },
+  { id: 5, name: 'Water Bill', description: 'Monthly water supply bill', category: 'Bills', amount: 420.00, date: '2026-05-01', type: 'Expense', isPositive: false },
+  { id: 6, name: 'Bus Pass', description: 'Monthly transit pass renewal', category: 'Transport', amount: 450.00, date: '2026-04-28', type: 'Expense', isPositive: false },
+  { id: 7, name: 'Pharmacy', description: 'Prescription medicine purchase', category: 'Healthcare', amount: 325.00, date: '2026-04-27', type: 'Expense', isPositive: false },
+  { id: 8, name: 'Clothing Store', description: 'Spring wardrobe haul', category: 'Shopping', amount: 2100.00, date: '2026-04-24', type: 'Expense', isPositive: false },
+];
 
 const DEFAULT_BUDGETS = {
   Bills: 5000,
@@ -21,18 +31,15 @@ const useAppStore = create(
       role: 'Admin',
       setRole: (newRole) => set({ role: newRole }),
 
-      // Transactions State
-      transactions: INITIAL_TRANSACTIONS,
+      // Transactions State — starts with sample data so the dashboard looks alive
+      transactions: SAMPLE_TRANSACTIONS,
       addTransaction: (newTx) => set((state) => ({ transactions: [newTx, ...state.transactions] })),
       deleteTransaction: (id) => set((state) => ({ transactions: state.transactions.filter(tx => tx.id !== id) })),
       editTransaction: (id, updatedFields) => set((state) => ({
         transactions: state.transactions.map(tx => tx.id === id ? { ...tx, ...updatedFields } : tx)
       })),
-      // Nuclear clear: wipe state AND localStorage in one atomic action
-      clearAllTransactions: () => {
-        localStorage.removeItem('basepoint-app-storage');
-        set({ transactions: [] });
-      },
+      // Clear all: sets to empty array. Persist middleware saves this so refresh stays empty.
+      clearAllTransactions: () => set({ transactions: [] }),
 
       // Budget State
       categoryBudgets: DEFAULT_BUDGETS,
@@ -53,13 +60,12 @@ const useAppStore = create(
     }),
     {
       name: 'basepoint-app-storage',
-      version: 3,
-      // Without a migrate function, Zustand IGNORES the version number.
-      // This function runs whenever stored version !== current version.
-      // Returning fresh initial state wipes ALL stale cached data.
+      version: 4,
+      // migrate runs whenever stored version < current version.
+      // Returns the fresh sample state so old stale data is wiped.
       migrate: (_persistedState, _version) => ({
         role: 'Admin',
-        transactions: [],
+        transactions: SAMPLE_TRANSACTIONS,
         categoryBudgets: DEFAULT_BUDGETS,
         goals: [],
       }),
