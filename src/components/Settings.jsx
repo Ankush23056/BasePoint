@@ -144,8 +144,7 @@ const Settings = () => {
   };
 
   const handleResetData = () => {
-    // Wipe current transactions then restore the sample set from the store
-    const { SAMPLE_TRANSACTIONS } = useAppStore.getState();
+    // Wipe current transactions then restore the sample set
     clearAllTransactions();
     const samples = [
       { id: 1, name: 'Salary Credit', description: 'May monthly salary', category: 'Salary', amount: 45000.00, date: '2026-05-01', type: 'Income', isPositive: true },

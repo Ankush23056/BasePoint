@@ -385,8 +385,6 @@ const Dashboard = () => {
   }, [transactions]);
 
   const spendingPowerStats = useMemo(() => {
-    // If no transactions exist, all spending metrics should be 0
-    if (transactions.length === 0) return { totalBudget: 0, dailyPower: 0 };
 
     const totalBudget = Object.values(categoryBudgets).reduce((acc, val) => acc + val, 0);
     const now = new Date();
@@ -449,7 +447,6 @@ const Dashboard = () => {
   }, [transactions]);
 
   const lineData = useMemo(() => {
-    if (transactions.length === 0) return [];
 
     const now = new Date();
     // Build last 6 months as {year, month} slots
