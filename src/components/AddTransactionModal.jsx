@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const CATEGORIES = [
+const EXPENSE_CATEGORIES = [
   { name: 'Bills',         color: '#4F46E5' },
   { name: 'Food',          color: '#10B981' },
   { name: 'Shopping',      color: '#8B5CF6' },
@@ -21,6 +21,14 @@ const CATEGORIES = [
   { name: 'Savings',       color: '#3B82F6' },
   { name: 'Investment',    color: '#6366F1' },
   { name: 'Other',         color: '#ab19a4' },
+];
+
+const INCOME_CATEGORIES = [
+  { name: 'Salary',        color: '#22C55E' },
+  { name: 'Stipend',       color: '#14B8A6' },
+  { name: 'Loan',          color: '#F59E0B' },
+  { name: 'Returned',      color: '#3B82F6' },
+  { name: 'Others',        color: '#A855F7' },
 ];
 
 const GOAL_CATEGORIES = ['Savings', 'Investment'];
@@ -111,13 +119,21 @@ const AddTransactionModal = ({ isOpen, onClose, onAdd }) => {
               {/* Type Switcher */}
               <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-2xl">
                 <button 
-                  type="button" onClick={() => setType('Expense')}
+                  type="button" 
+                  onClick={() => {
+                    setType('Expense');
+                    setCategory('Bills');
+                  }}
                   className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${type === 'Expense' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-md' : 'text-zinc-500'}`}
                 >
                   Expense
                 </button>
                 <button 
-                  type="button" onClick={() => setType('Income')}
+                  type="button" 
+                  onClick={() => {
+                    setType('Income');
+                    setCategory('Salary');
+                  }}
                   className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${type === 'Income' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-500'}`}
                 >
                   Income
@@ -163,7 +179,7 @@ const AddTransactionModal = ({ isOpen, onClose, onAdd }) => {
               <div className="space-y-3">
                 <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1">Category</label>
                 <div className="grid grid-cols-4 gap-2">
-                  {CATEGORIES.map((cat) => (
+                  {(type === 'Income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES).map((cat) => (
                     <button
                       key={cat.name}
                       type="button"

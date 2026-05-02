@@ -148,8 +148,8 @@ const Settings = () => {
     const { SAMPLE_TRANSACTIONS } = useAppStore.getState();
     clearAllTransactions();
     const samples = [
-      { id: 1, name: 'Salary Credit', description: 'May monthly salary', category: 'Freelance', amount: 45000.00, date: '2026-05-01', type: 'Income', isPositive: true },
-      { id: 2, name: 'Freelance Bonus', description: 'UI design project payment', category: 'Freelance', amount: 8500.00, date: '2026-05-02', type: 'Income', isPositive: true },
+      { id: 1, name: 'Salary Credit', description: 'May monthly salary', category: 'Salary', amount: 45000.00, date: '2026-05-01', type: 'Income', isPositive: true },
+      { id: 2, name: 'Freelance Bonus', description: 'UI design project payment', category: 'Stipend', amount: 8500.00, date: '2026-05-02', type: 'Income', isPositive: true },
       { id: 3, name: 'Grocery Run', description: 'Weekly groceries from DMart', category: 'Food', amount: 1850.00, date: '2026-05-02', type: 'Expense', isPositive: false },
       { id: 4, name: 'Netflix', description: 'Monthly streaming subscription', category: 'Entertainment', amount: 649.00, date: '2026-05-01', type: 'Expense', isPositive: false },
       { id: 5, name: 'Water Bill', description: 'Monthly water supply bill', category: 'Bills', amount: 420.00, date: '2026-05-01', type: 'Expense', isPositive: false },

@@ -18,9 +18,15 @@ const CATEGORY_COLORS = {
   Shopping: '#8B5CF6',
   Entertainment: '#F59E0B',
   Healthcare: '#EF4444',
-  Other: '#ab19a4ff',
+  Other: '#ab19a4',
   Transport: '#06B6D4',
-  Freelance: '#F472B6',
+  Savings: '#3B82F6',
+  Investment: '#6366F1',
+  Salary: '#22C55E',
+  Stipend: '#14B8A6',
+  Loan: '#F59E0B',
+  Returned: '#3B82F6',
+  Others: '#A855F7',
 };
 
 /* ── Animated savings ring ─────────────────────────────────────── */
