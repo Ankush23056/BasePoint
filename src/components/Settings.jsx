@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import {
   User, Mail, Palette, Sun, Moon, Trash2, RotateCcw,
   Shield, Info, ChevronRight, Check, AlertTriangle,
@@ -75,7 +76,7 @@ const ConfirmDialog = ({ title, message, onConfirm, onCancel, confirmLabel = 'Co
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    className="fixed inset-0 z-[100] flex items-center justify-center p-4"
   >
     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
     <motion.div
@@ -419,8 +420,9 @@ const Settings = () => {
       </motion.div>
 
       {/* ── Dialogs ── */}
-      <AnimatePresence>
-        {showClearDialog && (
+      {ReactDOM.createPortal(
+        <AnimatePresence>
+          {showClearDialog && (
           <ConfirmDialog
             title="Clear All Transactions?"
             message="This will permanently delete all your transaction records. This action cannot be undone."
@@ -447,7 +449,7 @@ const Settings = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
           >
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowBudgetModal(false)} />
             <motion.div
@@ -512,7 +514,9 @@ const Settings = () => {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   );
 };

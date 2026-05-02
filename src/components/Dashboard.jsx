@@ -16,7 +16,8 @@ import {
   Trophy,
   Trash2,
   Target,
-  X
+  X,
+  Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -357,7 +358,6 @@ const Dashboard = () => {
     }));
   }, [transactions]);
 
-  // Per-category total spend from expense transactions
   const categorySpend = useMemo(() => {
     const acc = {};
     transactions.forEach(t => {
@@ -366,6 +366,65 @@ const Dashboard = () => {
       }
     });
     return acc;
+  }, [transactions]);
+
+  const spendingPowerStats = useMemo(() => {
+    const totalBudget = Object.values(categoryBudgets).reduce((acc, val) => acc + val, 0);
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const currentMonthSpend = transactions
+      .filter(t => !t.isPositive)
+      .filter(t => {
+        try {
+          const d = new Date(t.date);
+          return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        } catch {
+          return false;
+        }
+      })
+      .reduce((acc, t) => acc + t.amount, 0);
+
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const daysRemaining = daysInMonth - now.getDate() + 1; // including today
+
+    const power = (totalBudget - currentMonthSpend) / daysRemaining;
+    return {
+      totalBudget,
+      dailyPower: power > 0 ? power : 0
+    };
+  }, [transactions, categoryBudgets]);
+
+  const impulseStats = useMemo(() => {
+    const now = new Date();
+    // Assuming 7 days per week
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+    let thisWeek = 0;
+    let lastWeek = 0;
+
+    transactions.forEach(t => {
+      if (!t.isPositive && t.amount < 500) {
+        try {
+          const d = new Date(t.date);
+          if (d >= oneWeekAgo && d <= now) {
+            thisWeek++;
+          } else if (d >= twoWeeksAgo && d < oneWeekAgo) {
+            lastWeek++;
+          }
+        } catch {}
+      }
+    });
+
+    const diff = thisWeek - lastWeek;
+    let trendText = '';
+    if (diff > 0) trendText = `Up by ${diff} from last week ⚠️`;
+    else if (diff < 0) trendText = `Down by ${Math.abs(diff)} from last week 👏`;
+    else trendText = "Same as last week";
+
+    return { thisWeek, trendText };
   }, [transactions]);
 
   const lineData = useMemo(() => {
@@ -428,6 +487,25 @@ const Dashboard = () => {
         onClose={() => setIsModalOpen(false)}
         onAdd={handleAdd}
       />
+
+      {/* Daily Spending Power Banner */}
+      <motion.div 
+        variants={{ hidden: { opacity: 0, y: -20 }, visible: { opacity: 1, y: 0 } }}
+        className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-xl shadow-indigo-500/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+      >
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md">
+            <Zap size={28} className="text-white" />
+          </div>
+          <div>
+            <h3 className="text-indigo-100 font-medium text-sm">Daily Spending Power</h3>
+            <p className="text-3xl font-black tracking-tight mt-1">₹{Math.floor(spendingPowerStats.dailyPower).toLocaleString('en-IN')}</p>
+          </div>
+        </div>
+        <div className="bg-white/10 px-5 py-3 rounded-2xl backdrop-blur-md border border-white/20 text-sm font-medium">
+          You can safely spend <strong className="font-bold text-white">₹{Math.floor(spendingPowerStats.dailyPower).toLocaleString('en-IN')}</strong> today to stay within your ₹{spendingPowerStats.totalBudget.toLocaleString('en-IN')} monthly budget.
+        </div>
+      </motion.div>
 
       {/* 3 Top Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -717,6 +795,19 @@ const Dashboard = () => {
           <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">Insights</h3>
 
           <div className="space-y-6">
+            <div className="flex items-center gap-4 group">
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform">
+                <Zap size={20} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Impulse Score</p>
+                <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">
+                  {impulseStats.thisWeek} small purchases this week
+                </h4>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">{impulseStats.trendText}</p>
+              </div>
+            </div>
+
             <div className="flex items-center gap-4 group">
               <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
                 <PieIcon size={20} />
