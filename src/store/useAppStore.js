@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+// Developer Note: Using Zustand with persist middleware for a privacy-first, local-only approach.
+// This ensures all financial data remains on the user's device (localStorage) by default.
+
 // Sample transactions with current month dates (May 2026) so the chart is relevant
 const SAMPLE_TRANSACTIONS = [
   { id: 1, name: 'Salary Credit', description: 'May monthly salary', category: 'Salary', amount: 45000.00, date: '2026-05-01', type: 'Income', isPositive: true },

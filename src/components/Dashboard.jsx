@@ -1,5 +1,11 @@
-import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import ReactDOM from 'react-dom';
+import React, {
+  useState,
+  useMemo,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
+import ReactDOM from "react-dom";
 import {
   TrendingUp,
   TrendingDown,
@@ -14,9 +20,9 @@ import {
   Target,
   Zap,
   IndianRupee,
-  X
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+  X,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   AreaChart,
   Area,
@@ -28,37 +34,41 @@ import {
   PieChart,
   Pie,
   Cell,
-  Sector
-} from 'recharts';
-import AddTransactionModal from './AddTransactionModal';
-import { useToast } from './Toast';
-import useAppStore from '../store/useAppStore';
+  Sector,
+} from "recharts";
+import AddTransactionModal from "./AddTransactionModal";
+import { useToast } from "./Toast";
+import useAppStore from "../store/useAppStore";
 
 const CATEGORY_COLORS = {
-  Bills: '#4F46E5',
-  Food: '#10B981',
-  Shopping: '#8B5CF6',
-  Entertainment: '#F59E0B',
-  Healthcare: '#EF4444',
-  Other: '#ab19a4',
-  Transport: '#06B6D4',
-  Savings: '#3B82F6',
-  Investment: '#6366F1',
-  Salary: '#22C55E',
-  Stipend: '#14B8A6',
-  Loan: '#F59E0B',
-  Returned: '#3B82F6',
-  Others: '#A855F7',
+  Bills: "#4F46E5",
+  Food: "#10B981",
+  Shopping: "#8B5CF6",
+  Entertainment: "#F59E0B",
+  Healthcare: "#EF4444",
+  Other: "#ab19a4",
+  Transport: "#06B6D4",
+  Savings: "#3B82F6",
+  Investment: "#6366F1",
+  Salary: "#22C55E",
+  Stipend: "#14B8A6",
+  Loan: "#F59E0B",
+  Returned: "#3B82F6",
+  Others: "#A855F7",
 };
 
 const renderActiveShape = (props) => {
-  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } =
+    props;
   return (
     <g>
       <Sector
-        cx={cx} cy={cy}
-        innerRadius={innerRadius} outerRadius={outerRadius + 8}
-        startAngle={startAngle} endAngle={endAngle}
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius + 8}
+        startAngle={startAngle}
+        endAngle={endAngle}
         fill={fill}
         className="transition-all duration-300"
       />
@@ -66,27 +76,48 @@ const renderActiveShape = (props) => {
   );
 };
 
-const StatCard = ({ title, amount, icon, iconBg, iconColor, trend, trendLabel }) => (
+const StatCard = ({
+  title,
+  amount,
+  icon,
+  iconBg,
+  iconColor,
+  trend,
+  trendLabel,
+}) => (
   <motion.div
     variants={{
       hidden: { opacity: 0, scale: 0.95, y: 20 },
-      visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+      visible: {
+        opacity: 1,
+        scale: 1,
+        y: 0,
+        transition: { type: "spring", stiffness: 300, damping: 24 },
+      },
     }}
     whileHover={{ y: -4 }}
     className="card flex flex-col justify-between group"
   >
     <div className="flex items-center justify-between pointer-events-none">
       <div className="space-y-1">
-        <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">{title}</p>
-        <h3 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">{amount}</h3>
+        <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+          {title}
+        </p>
+        <h3 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+          {amount}
+        </h3>
       </div>
-      <div className={`p-3 lg:p-4 rounded-2xl ${iconBg} ${iconColor} shadow-inner`}>
+      <div
+        className={`p-3 lg:p-4 rounded-2xl ${iconBg} ${iconColor} shadow-inner`}
+      >
         {icon}
       </div>
     </div>
     {trend && (
       <div className="mt-4 flex items-center gap-2 pointer-events-none">
-        <span className={`text-xs font-bold px-2 py-1 rounded-md ${trend.startsWith('+') ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400'}`}>
+        <span
+          className={`text-xs font-bold px-2 py-1 rounded-md ${trend.startsWith("+") ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400"}`}
+        >
           {trend}
         </span>
         <span className="text-xs font-medium text-zinc-500">{trendLabel}</span>
@@ -98,7 +129,10 @@ const StatCard = ({ title, amount, icon, iconBg, iconColor, trend, trendLabel })
 const TransactionItem = ({ name, category, amount, date, isPositive }) => {
   const displayDate = (() => {
     try {
-      return new Date(date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+      return new Date(date).toLocaleDateString("en-IN", {
+        month: "short",
+        day: "numeric",
+      });
     } catch {
       return date;
     }
@@ -111,13 +145,19 @@ const TransactionItem = ({ name, category, amount, date, isPositive }) => {
           {name[0]}
         </div>
         <div>
-          <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{name}</h4>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{category} • {displayDate}</p>
+          <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            {name}
+          </h4>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+            {category} • {displayDate}
+          </p>
         </div>
       </div>
       <div className="text-right">
-        <p className={`text-sm font-bold ${isPositive ? 'text-emerald-600' : 'text-rose-500'}`}>
-          {isPositive ? '+' : '-'}₹{amount.toLocaleString('en-IN')}
+        <p
+          className={`text-sm font-bold ${isPositive ? "text-emerald-600" : "text-rose-500"}`}
+        >
+          {isPositive ? "+" : "-"}₹{amount.toLocaleString("en-IN")}
         </p>
       </div>
     </div>
@@ -128,16 +168,29 @@ const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-xl">
-        <p className="text-xs font-semibold text-zinc-500 mb-1">{payload[0].payload.name}</p>
-        <p className="text-sm font-bold text-indigo-600">Balance: ₹{payload[0].value.toLocaleString('en-IN')}</p>
+        <p className="text-xs font-semibold text-zinc-500 mb-1">
+          {payload[0].payload.name}
+        </p>
+        <p className="text-sm font-bold text-indigo-600">
+          Balance: ₹{payload[0].value.toLocaleString("en-IN")}
+        </p>
       </div>
     );
   }
   return null;
 };
 
-/* ── Confetti burst ─────────────────────────────────────────────── */
-const CONFETTI_COLORS = ['#4F46E5','#10B981','#F59E0B','#EF4444','#8B5CF6','#F472B6','#06B6D4','#34D399'];
+// Developer Note: Lightweight confetti engine triggered on goal completion
+const CONFETTI_COLORS = [
+  "#4F46E5",
+  "#10B981",
+  "#F59E0B",
+  "#EF4444",
+  "#8B5CF6",
+  "#F472B6",
+  "#06B6D4",
+  "#34D399",
+];
 
 const Confetti = ({ active }) => {
   const particles = useMemo(() => {
@@ -171,22 +224,37 @@ const Confetti = ({ active }) => {
   if (!active) return null;
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden rounded-2xl z-10">
-      {particles.map(p => (
+      {particles.map((p) => (
         <motion.div
           key={p.id}
           initial={{ x: 0, y: 0, opacity: 1, scale: 1, rotate: 0 }}
-          animate={{ x: p.tx, y: p.ty, opacity: 0, scale: 0.2, rotate: p.rotate }}
-          transition={{ duration: p.duration, delay: p.delay, ease: 'easeOut' }}
-          style={{ position: 'absolute', width: p.size, height: p.size * 0.45, borderRadius: 2, backgroundColor: p.color }}
+          animate={{
+            x: p.tx,
+            y: p.ty,
+            opacity: 0,
+            scale: 0.2,
+            rotate: p.rotate,
+          }}
+          transition={{ duration: p.duration, delay: p.delay, ease: "easeOut" }}
+          style={{
+            position: "absolute",
+            width: p.size,
+            height: p.size * 0.45,
+            borderRadius: 2,
+            backgroundColor: p.color,
+          }}
         />
       ))}
     </div>
   );
 };
 
-/* ── Goal card ──────────────────────────────────────────────────── */
+// Developer Note: Reusable GoalCard component for tracking long-term savings targets
 const GoalCard = ({ goal, onDelete }) => {
-  const pct = goal.targetAmount > 0 ? Math.min((goal.currentAmount / goal.targetAmount) * 100, 100) : 0;
+  const pct =
+    goal.targetAmount > 0
+      ? Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
+      : 0;
   const isComplete = pct >= 100;
   const [showConfetti, setShowConfetti] = useState(false);
   const [showLevelUp, setShowLevelUp] = useState(false);
@@ -206,9 +274,12 @@ const GoalCard = ({ goal, onDelete }) => {
 
   return (
     <motion.div
-      variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1 } }}
+      variants={{
+        hidden: { opacity: 0, scale: 0.95 },
+        visible: { opacity: 1, scale: 1 },
+      }}
       whileHover={{ y: -4 }}
-      className={`relative card overflow-hidden transition-all ${isComplete ? 'ring-2 ring-emerald-400 dark:ring-emerald-500' : ''}`}
+      className={`relative card overflow-hidden transition-all ${isComplete ? "ring-2 ring-emerald-400 dark:ring-emerald-500" : ""}`}
     >
       <Confetti active={showConfetti} />
 
@@ -221,12 +292,21 @@ const GoalCard = ({ goal, onDelete }) => {
             className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-emerald-500/95 dark:bg-emerald-600/95 rounded-2xl backdrop-blur-sm"
           >
             <motion.div
-              animate={{ rotate: [0, -15, 15, -10, 10, 0], scale: [1, 1.4, 1.4, 1.4, 1.4, 1] }}
+              animate={{
+                rotate: [0, -15, 15, -10, 10, 0],
+                scale: [1, 1.4, 1.4, 1.4, 1.4, 1],
+              }}
               transition={{ duration: 0.7 }}
               className="text-5xl mb-3"
-            >🏆</motion.div>
-            <p className="text-white font-black text-xl tracking-tight">Goal Achieved!</p>
-            <p className="text-emerald-100 text-sm mt-1 font-medium">Level Up! 🎉</p>
+            >
+              🏆
+            </motion.div>
+            <p className="text-white font-black text-xl tracking-tight">
+              Goal Achieved!
+            </p>
+            <p className="text-emerald-100 text-sm mt-1 font-medium">
+              Level Up! 🎉
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -235,8 +315,12 @@ const GoalCard = ({ goal, onDelete }) => {
         <div className="flex items-center gap-3">
           <span className="text-3xl">{goal.emoji}</span>
           <div>
-            <h4 className="font-bold text-zinc-900 dark:text-zinc-100">{goal.name}</h4>
-            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">Target: ₹{goal.targetAmount.toLocaleString('en-IN')}</p>
+            <h4 className="font-bold text-zinc-900 dark:text-zinc-100">
+              {goal.name}
+            </h4>
+            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
+              Target: ₹{goal.targetAmount.toLocaleString("en-IN")}
+            </p>
           </div>
         </div>
         <button
@@ -250,9 +334,11 @@ const GoalCard = ({ goal, onDelete }) => {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
-            ₹{goal.currentAmount.toLocaleString('en-IN')}
+            ₹{goal.currentAmount.toLocaleString("en-IN")}
           </span>
-          <span className={`text-xs font-bold tabular-nums ${isComplete ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500'}`}>
+          <span
+            className={`text-xs font-bold tabular-nums ${isComplete ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-500"}`}
+          >
             {Math.round(pct)}%
           </span>
         </div>
@@ -260,31 +346,59 @@ const GoalCard = ({ goal, onDelete }) => {
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
-            transition={{ duration: 1.1, ease: 'easeOut' }}
-            className={`h-full rounded-full ${isComplete ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+            transition={{ duration: 1.1, ease: "easeOut" }}
+            className={`h-full rounded-full ${isComplete ? "bg-emerald-500" : "bg-indigo-500"}`}
           />
         </div>
         <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">
-          {isComplete ? '🎉 Fully funded!' : `₹${(goal.targetAmount - goal.currentAmount).toLocaleString('en-IN')} remaining`}
+          {isComplete
+            ? "🎉 Fully funded!"
+            : `₹${(goal.targetAmount - goal.currentAmount).toLocaleString("en-IN")} remaining`}
         </p>
       </div>
     </motion.div>
   );
 };
 
-/* ── Add Goal modal (portal) ────────────────────────────────────── */
-const GOAL_EMOJIS = ['🎯','🏠','✈️','🚗','📱','💻','🎓','💍','🏋️','🌴','🏦','💰','🛡️','🎮','📚','🏕️'];
+// Developer Note: Portal-based modal for creating new savings targets without layout interference
+const GOAL_EMOJIS = [
+  "🎯",
+  "🏠",
+  "✈️",
+  "🚗",
+  "📱",
+  "💻",
+  "🎓",
+  "💍",
+  "🏋️",
+  "🌴",
+  "🏦",
+  "💰",
+  "🛡️",
+  "🎮",
+  "📚",
+  "🏕️",
+];
 
 const AddGoalModal = ({ isOpen, onClose, onAdd }) => {
-  const [name, setName] = useState('');
-  const [target, setTarget] = useState('');
-  const [emoji, setEmoji] = useState('🎯');
+  const [name, setName] = useState("");
+  const [target, setTarget] = useState("");
+  const [emoji, setEmoji] = useState("🎯");
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name.trim() || !target || parseFloat(target) <= 0) return;
-    onAdd({ id: Date.now(), name: name.trim(), targetAmount: parseFloat(target), currentAmount: 0, emoji, createdAt: new Date().toISOString() });
-    setName(''); setTarget(''); setEmoji('🎯');
+    onAdd({
+      id: Date.now(),
+      name: name.trim(),
+      targetAmount: parseFloat(target),
+      currentAmount: 0,
+      emoji,
+      createdAt: new Date().toISOString(),
+    });
+    setName("");
+    setTarget("");
+    setEmoji("🎯");
     onClose();
   };
 
@@ -292,49 +406,90 @@ const AddGoalModal = ({ isOpen, onClose, onAdd }) => {
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose} className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-[100]" />
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-[100]"
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl z-[101] overflow-hidden"
           >
             <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-800/30">
               <div>
                 <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                  <Trophy size={20} className="text-amber-500" /> New Savings Goal
+                  <Trophy size={20} className="text-amber-500" /> New Savings
+                  Goal
                 </h3>
-                <p className="text-xs text-zinc-500 mt-1 font-medium">Set a target and track your progress.</p>
+                <p className="text-xs text-zinc-500 mt-1 font-medium">
+                  Set a target and track your progress.
+                </p>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition-colors">
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition-colors"
+              >
                 <X size={20} className="text-zinc-500" />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1">Choose Icon</label>
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1">
+                  Choose Icon
+                </label>
                 <div className="flex flex-wrap gap-2">
-                  {GOAL_EMOJIS.map(e => (
-                    <button key={e} type="button" onClick={() => setEmoji(e)}
-                      className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all ${emoji === e ? 'bg-indigo-100 dark:bg-indigo-900/40 ring-2 ring-indigo-500 scale-110' : 'bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}>
+                  {GOAL_EMOJIS.map((e) => (
+                    <button
+                      key={e}
+                      type="button"
+                      onClick={() => setEmoji(e)}
+                      className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all ${emoji === e ? "bg-indigo-100 dark:bg-indigo-900/40 ring-2 ring-indigo-500 scale-110" : "bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700"}`}
+                    >
                       {e}
                     </button>
                   ))}
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1">Goal Name</label>
-                <input value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Emergency Fund, Dream Vacation…"
-                  className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-3 px-4 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all dark:text-white placeholder:text-zinc-400" />
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1">
+                  Goal Name
+                </label>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  placeholder="e.g. Emergency Fund, Dream Vacation…"
+                  className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-3 px-4 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all dark:text-white placeholder:text-zinc-400"
+                />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1">Target Amount</label>
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1">
+                  Target Amount
+                </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-semibold text-sm">₹</span>
-                  <input type="number" min="1" required value={target} onChange={e => setTarget(e.target.value)} placeholder="50,000"
-                    className="w-full pl-8 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all dark:text-white placeholder:text-zinc-400" />
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-semibold text-sm">
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    value={target}
+                    onChange={(e) => setTarget(e.target.value)}
+                    placeholder="50,000"
+                    className="w-full pl-8 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all dark:text-white placeholder:text-zinc-400"
+                  />
                 </div>
               </div>
-              <motion.button whileTap={{ scale: 0.97 }} type="submit" className="w-full btn-primary py-3.5 flex items-center justify-center gap-2 font-bold">
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                type="submit"
+                className="w-full btn-primary py-3.5 flex items-center justify-center gap-2 font-bold"
+              >
                 <Target size={18} /> Create Goal
               </motion.button>
             </form>
@@ -342,13 +497,20 @@ const AddGoalModal = ({ isOpen, onClose, onAdd }) => {
         </>
       )}
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 };
 
 const Dashboard = () => {
-
-  const { transactions, addTransaction, role, categoryBudgets, goals, addGoal, deleteGoal } = useAppStore();
+  const {
+    transactions,
+    addTransaction,
+    role,
+    categoryBudgets,
+    goals,
+    addGoal,
+    deleteGoal,
+  } = useAppStore();
   const { showToast } = useToast();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -360,24 +522,26 @@ const Dashboard = () => {
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const isViewer = role === 'Viewer';
+  const isViewer = role === "Viewer";
 
+  // Developer Note: Using IntersectionObserver to dynamically toggle the Mobile FAB
+  // when the primary "Add Transaction" CTA is scrolled out of view.
   const observerRef = useRef(null);
-  const buttonRef = useCallback(node => {
+  const buttonRef = useCallback((node) => {
     if (observerRef.current) {
       observerRef.current.disconnect();
     }
-    
+
     if (node) {
       const observer = new IntersectionObserver(
         ([entry]) => {
           setShowFixedFAB(!entry.isIntersecting);
         },
-        { threshold: 0, root: null }
+        { threshold: 0, root: null },
       );
       observer.observe(node);
       observerRef.current = observer;
@@ -394,15 +558,23 @@ const Dashboard = () => {
     };
   }, []);
 
-  const stats = useMemo(() => {
-    const txns = transactions || [];
-    const income = txns.reduce((acc, curr) => curr.isPositive ? acc + curr.amount : acc, 0);
-    const expenses = txns.reduce((acc, curr) => !curr.isPositive ? acc + curr.amount : acc, 0);
+  // Developer Note: Aggregated dashboard totals using a privacy-first local state approach
+  const dashboardTotals = useMemo(() => {
+    const transactionHistory = transactions || [];
+    const income = transactionHistory.reduce(
+      (acc, curr) => (curr.isPositive ? acc + curr.amount : acc),
+      0,
+    );
+    const expenses = transactionHistory.reduce(
+      (acc, curr) => (!curr.isPositive ? acc + curr.amount : acc),
+      0,
+    );
     return { balance: income - expenses, income, expenses };
   }, [transactions]);
 
-  const growthStats = useMemo(() => {
-    const txns = transactions || [];
+  // Developer Note: Calculating Month-over-Month (MoM) growth analytics for financial trends
+  const monthlyGrowthAnalytics = useMemo(() => {
+    const transactionHistory = transactions || [];
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
@@ -411,52 +583,64 @@ const Dashboard = () => {
     const prevMonth = prevDate.getMonth();
     const prevYear = prevDate.getFullYear();
 
-    const current = txns.reduce((acc, t) => {
-      const d = new Date(t.date);
-      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
-        if (t.isPositive) acc.income += t.amount;
-        else acc.expenses += t.amount;
-      }
-      return acc;
-    }, { income: 0, expenses: 0 });
+    const current = transactionHistory.reduce(
+      (acc, t) => {
+        const d = new Date(t.date);
+        if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+          if (t.isPositive) acc.income += t.amount;
+          else acc.expenses += t.amount;
+        }
+        return acc;
+      },
+      { income: 0, expenses: 0 },
+    );
 
-    const previous = txns.reduce((acc, t) => {
-      const d = new Date(t.date);
-      if (d.getMonth() === prevMonth && d.getFullYear() === prevYear) {
-        if (t.isPositive) acc.income += t.amount;
-        else acc.expenses += t.amount;
-      }
-      return acc;
-    }, { income: 0, expenses: 0 });
+    const previous = transactionHistory.reduce(
+      (acc, t) => {
+        const d = new Date(t.date);
+        if (d.getMonth() === prevMonth && d.getFullYear() === prevYear) {
+          if (t.isPositive) acc.income += t.amount;
+          else acc.expenses += t.amount;
+        }
+        return acc;
+      },
+      { income: 0, expenses: 0 },
+    );
 
     const calculateGrowth = (curr, prev) => {
-      if (prev === 0) return '0%';
+      if (prev === 0) return "0%";
       const growth = ((curr - prev) / Math.abs(prev)) * 100;
-      return `${growth >= 0 ? '+' : ''}${growth.toFixed(1)}%`;
+      return `${growth >= 0 ? "+" : ""}${growth.toFixed(1)}%`;
     };
 
     return {
-      balance: calculateGrowth(current.income - current.expenses, previous.income - previous.expenses),
+      balance: calculateGrowth(
+        current.income - current.expenses,
+        previous.income - previous.expenses,
+      ),
       income: calculateGrowth(current.income, previous.income),
-      expenses: calculateGrowth(current.expenses, previous.expenses)
+      expenses: calculateGrowth(current.expenses, previous.expenses),
     };
   }, [transactions]);
 
-  const pieData = useMemo(() => {
+  // Developer Note: Distribution of expenses by category for donut chart visualization
+  const expenseCategoryDistribution = useMemo(() => {
     const categories = {};
-    (transactions || []).forEach(t => {
+    (transactions || []).forEach((t) => {
       if (!t.isPositive) {
         categories[t.category] = (categories[t.category] || 0) + t.amount;
       }
     });
     return Object.entries(categories).map(([name, value]) => ({
-      name, value, color: CATEGORY_COLORS[name] || '#94a3b8'
+      name,
+      value,
+      color: CATEGORY_COLORS[name] || "#94a3b8",
     }));
   }, [transactions]);
 
   const categorySpend = useMemo(() => {
     const acc = {};
-    (transactions || []).forEach(t => {
+    (transactions || []).forEach((t) => {
       if (!t.isPositive) {
         acc[t.category] = (acc[t.category] || 0) + t.amount;
       }
@@ -464,20 +648,26 @@ const Dashboard = () => {
     return acc;
   }, [transactions]);
 
-  const spendingPowerStats = useMemo(() => {
-    const txns = transactions || [];
+  // Developer Note: Calculating daily spending limits based on monthly budget guardrails
+  const dailyLiquidityPower = useMemo(() => {
+    const transactionHistory = transactions || [];
     const budgets = categoryBudgets || {};
-    const totalBudget = Object.values(budgets).reduce((acc, val) => acc + val, 0);
+    const totalBudget = Object.values(budgets).reduce(
+      (acc, val) => acc + val,
+      0,
+    );
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    const currentMonthSpend = txns
-      .filter(t => !t.isPositive)
-      .filter(t => {
+    const currentMonthSpend = transactionHistory
+      .filter((t) => !t.isPositive)
+      .filter((t) => {
         try {
           const d = new Date(t.date);
-          return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+          return (
+            d.getMonth() === currentMonth && d.getFullYear() === currentYear
+          );
         } catch {
           return false;
         }
@@ -490,11 +680,12 @@ const Dashboard = () => {
     const power = (totalBudget - currentMonthSpend) / daysRemaining;
     return {
       totalBudget,
-      dailyPower: power > 0 ? power : 0
+      dailyPower: power > 0 ? power : 0,
     };
   }, [transactions, categoryBudgets]);
 
-  const impulseStats = useMemo(() => {
+  // Developer Note: Tracking micro-transactions and impulse spending patterns
+  const microTransactionAnalysis = useMemo(() => {
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
@@ -502,7 +693,7 @@ const Dashboard = () => {
     let thisWeek = 0;
     let lastWeek = 0;
 
-    (transactions || []).forEach(t => {
+    (transactions || []).forEach((t) => {
       if (!t.isPositive && t.amount < 500) {
         try {
           const d = new Date(t.date);
@@ -518,15 +709,17 @@ const Dashboard = () => {
     });
 
     const diff = thisWeek - lastWeek;
-    let trendText = '';
+    let trendText = "";
     if (diff > 0) trendText = `Up by ${diff} from last week ⚠️`;
-    else if (diff < 0) trendText = `Down by ${Math.abs(diff)} from last week 👏`;
+    else if (diff < 0)
+      trendText = `Down by ${Math.abs(diff)} from last week 👏`;
     else trendText = "Same as last week";
 
     return { thisWeek, trendText };
   }, [transactions]);
 
-  const lineData = useMemo(() => {
+  // Developer Note: Aggregating transaction history into a 6-month equity trend series
+  const equityTrendSeries = useMemo(() => {
     const now = new Date();
     // Build last 6 months as {year, month} slots
     const monthSlots = [];
@@ -535,16 +728,18 @@ const Dashboard = () => {
       monthSlots.push({
         year: d.getFullYear(),
         month: d.getMonth(),
-        name: d.toLocaleString('en-US', { month: 'short' }),
+        name: d.toLocaleString("en-US", { month: "short" }),
         value: 0,
       });
     }
 
     // Accumulate real income - expenses per month from actual transactions
-    (transactions || []).forEach(t => {
+    (transactions || []).forEach((t) => {
       try {
         const d = new Date(t.date);
-        const slot = monthSlots.find(s => s.year === d.getFullYear() && s.month === d.getMonth());
+        const slot = monthSlots.find(
+          (s) => s.year === d.getFullYear() && s.month === d.getMonth(),
+        );
         if (slot) {
           slot.value += t.isPositive ? t.amount : -t.amount;
         }
@@ -559,9 +754,9 @@ const Dashboard = () => {
   const handleAdd = (newTx) => {
     addTransaction(newTx);
     showToast({
-      type: 'success',
-      title: 'Transaction Added!',
-      message: `${newTx.name} — ₹${newTx.amount.toLocaleString('en-IN')} recorded successfully.`,
+      type: "success",
+      title: "Transaction Added!",
+      message: `${newTx.name} — ₹${newTx.amount.toLocaleString("en-IN")} recorded successfully.`,
     });
   };
 
@@ -571,7 +766,7 @@ const Dashboard = () => {
       animate="visible"
       variants={{
         hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+        visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
       }}
       className="space-y-8 pb-10"
     >
@@ -579,9 +774,14 @@ const Dashboard = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
-            Finance <span className="text-indigo-600 dark:text-indigo-400">Dashboard</span>
+            Finance{" "}
+            <span className="text-indigo-600 dark:text-indigo-400">
+              Dashboard
+            </span>
           </h2>
-          <p className="text-zinc-500 dark:text-zinc-400 mt-1.5 font-medium">Manage your money and stay organized.</p>
+          <p className="text-zinc-500 dark:text-zinc-400 mt-1.5 font-medium">
+            Manage your money and stay organized.
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <button className="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all shadow-sm">
@@ -607,8 +807,11 @@ const Dashboard = () => {
       />
 
       {/* Daily Spending Power Banner */}
-      <motion.div 
-        variants={{ hidden: { opacity: 0, y: -20 }, visible: { opacity: 1, y: 0 } }}
+      <motion.div
+        variants={{
+          hidden: { opacity: 0, y: -20 },
+          visible: { opacity: 1, y: 0 },
+        }}
         className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-xl shadow-indigo-500/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
       >
         <div className="flex items-center gap-4">
@@ -616,12 +819,26 @@ const Dashboard = () => {
             <Zap size={28} className="text-white" />
           </div>
           <div>
-            <h3 className="text-indigo-100 font-medium text-sm">Daily Spending Power</h3>
-            <p className="text-3xl font-black tracking-tight mt-1">₹{Math.floor(spendingPowerStats.dailyPower).toLocaleString('en-IN')}</p>
+            <h3 className="text-indigo-100 font-medium text-sm">
+              Daily Spending Power
+            </h3>
+            <p className="text-3xl font-black tracking-tight mt-1">
+              ₹
+              {Math.floor(dailyLiquidityPower.dailyPower).toLocaleString(
+                "en-IN",
+              )}
+            </p>
           </div>
         </div>
         <div className="bg-white/10 px-5 py-3 rounded-2xl backdrop-blur-md border border-white/20 text-sm font-medium">
-          You can safely spend <strong className="font-bold text-white">₹{Math.floor(spendingPowerStats.dailyPower).toLocaleString('en-IN')}</strong> today to stay within your ₹{spendingPowerStats.totalBudget.toLocaleString('en-IN')} monthly budget.
+          You can safely spend{" "}
+          <strong className="font-bold text-white">
+            ₹
+            {Math.floor(dailyLiquidityPower.dailyPower).toLocaleString("en-IN")}
+          </strong>{" "}
+          today to stay within your ₹
+          {dailyLiquidityPower.totalBudget.toLocaleString("en-IN")} monthly
+          budget.
         </div>
       </motion.div>
 
@@ -648,29 +865,29 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard
           title="Total Balance"
-          amount={`₹${stats.balance.toLocaleString('en-IN')}`}
+          amount={`₹${dashboardTotals.balance.toLocaleString("en-IN")}`}
           icon={<IndianRupee size={22} />}
           iconBg="bg-blue-50 dark:bg-blue-900/20"
           iconColor="text-blue-600 dark:text-blue-400"
-          trend={growthStats.balance}
+          trend={monthlyGrowthAnalytics.balance}
           trendLabel="from last month"
         />
         <StatCard
           title="Total Income"
-          amount={`₹${stats.income.toLocaleString('en-IN')}`}
+          amount={`₹${dashboardTotals.income.toLocaleString("en-IN")}`}
           icon={<TrendingUp size={22} />}
           iconBg="bg-emerald-50 dark:bg-emerald-900/20"
           iconColor="text-emerald-600 dark:text-emerald-400"
-          trend={growthStats.income}
+          trend={monthlyGrowthAnalytics.income}
           trendLabel="from last month"
         />
         <StatCard
           title="Total Expenses"
-          amount={`₹${stats.expenses.toLocaleString('en-IN')}`}
+          amount={`₹${dashboardTotals.expenses.toLocaleString("en-IN")}`}
           icon={<TrendingDown size={22} />}
           iconBg="bg-rose-50 dark:bg-rose-900/20"
           iconColor="text-rose-600 dark:text-rose-400"
-          trend={growthStats.expenses}
+          trend={monthlyGrowthAnalytics.expenses}
           trendLabel="from last month"
         />
       </div>
@@ -678,42 +895,125 @@ const Dashboard = () => {
       {/* Main Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Balance Trend */}
-        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="card lg:col-span-2 flex flex-col">
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, y: 20 },
+            visible: { opacity: 1, y: 0 },
+          }}
+          className="card lg:col-span-2 flex flex-col"
+        >
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">Balance Trend</h3>
-              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Equity over the last 6 months</p>
+              <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">
+                Balance Trend
+              </h3>
+              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                Equity over the last 6 months
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 bg-indigo-600 rounded-sm" />
-              <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">Balance</span>
+              <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                Balance
+              </span>
             </div>
           </div>
           <div className="flex-1 w-full flex flex-col relative min-h-[250px] sm:min-h-[300px] lg:min-h-[350px]">
             {(transactions || []).length === 0 ? (
               <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-zinc-50 dark:bg-zinc-800/20 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
                 <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                  <TrendingUp size={28} className="text-zinc-300 dark:text-zinc-600" />
+                  <TrendingUp
+                    size={28}
+                    className="text-zinc-300 dark:text-zinc-600"
+                  />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">No data yet</p>
-                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Add a transaction to get started.</p>
+                  <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+                    No data yet
+                  </p>
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
+                    Add a transaction to get started.
+                  </p>
                 </div>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={lineData} margin={{ top: 10, right: 10, left: isMobile ? 10 : -20, bottom: 0 }}>
+                <AreaChart
+                  data={equityTrendSeries}
+                  margin={{
+                    top: 10,
+                    right: 10,
+                    left: isMobile ? 10 : -20,
+                    bottom: 0,
+                  }}
+                >
                   <defs>
-                    <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient
+                      id="colorBalance"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
                       <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.4} />
                       <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  {!isMobile && <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#E5E7EB" opacity={0.6} />}
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }} dy={10} />
-                  {!isMobile && <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }} tickFormatter={(val) => `₹${val / 1000}k`} />}
-                  <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#6366F1', strokeWidth: 1.5, strokeDasharray: '4 4' }} />
-                  <Area type="monotone" dataKey="value" stroke="#4F46E5" strokeWidth={3} fillOpacity={1} fill="url(#colorBalance)" dot={!isMobile ? { r: 5, fill: '#4F46E5', strokeWidth: 2, stroke: '#ffffff' } : false} activeDot={{ r: 7, fill: '#4F46E5', strokeWidth: 3, stroke: '#ffffff' }} />
+                  {!isMobile && (
+                    <CartesianGrid
+                      strokeDasharray="4 4"
+                      vertical={false}
+                      stroke="#E5E7EB"
+                      opacity={0.6}
+                    />
+                  )}
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: "#6B7280", fontWeight: 500 }}
+                    dy={10}
+                  />
+                  {!isMobile && (
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: "#6B7280", fontWeight: 500 }}
+                      tickFormatter={(val) => `₹${val / 1000}k`}
+                    />
+                  )}
+                  <Tooltip
+                    content={<CustomTooltip />}
+                    cursor={{
+                      stroke: "#6366F1",
+                      strokeWidth: 1.5,
+                      strokeDasharray: "4 4",
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#4F46E5"
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill="url(#colorBalance)"
+                    dot={
+                      !isMobile
+                        ? {
+                            r: 5,
+                            fill: "#4F46E5",
+                            strokeWidth: 2,
+                            stroke: "#ffffff",
+                          }
+                        : false
+                    }
+                    activeDot={{
+                      r: 7,
+                      fill: "#4F46E5",
+                      strokeWidth: 3,
+                      stroke: "#ffffff",
+                    }}
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             )}
@@ -721,17 +1021,32 @@ const Dashboard = () => {
         </motion.div>
 
         {/* Spending Category Donut Chart */}
-        <motion.div variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1 } }} className="card flex flex-col">
-          <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100 mb-8">Spending by Category</h3>
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, scale: 0.95 },
+            visible: { opacity: 1, scale: 1 },
+          }}
+          className="card flex flex-col"
+        >
+          <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100 mb-8">
+            Spending by Category
+          </h3>
 
-          {(pieData || []).length === 0 ? (
+          {(expenseCategoryDistribution || []).length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 min-h-[250px]">
               <div className="w-20 h-20 rounded-3xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                <PieIcon size={36} className="text-zinc-300 dark:text-zinc-600" />
+                <PieIcon
+                  size={36}
+                  className="text-zinc-300 dark:text-zinc-600"
+                />
               </div>
               <div className="text-center">
-                <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">No Expense Data</p>
-                <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Add expense transactions to see spending categories.</p>
+                <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+                  No Expense Data
+                </p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
+                  Add expense transactions to see spending categories.
+                </p>
               </div>
             </div>
           ) : (
@@ -740,15 +1055,24 @@ const Dashboard = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={pieData} cx="50%" cy="50%"
-                      innerRadius="65%" outerRadius="90%"
-                      paddingAngle={5} dataKey="value"
-                      activeIndex={activePieIndex} activeShape={renderActiveShape}
+                      data={expenseCategoryDistribution}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="65%"
+                      outerRadius="90%"
+                      paddingAngle={5}
+                      dataKey="value"
+                      activeIndex={activePieIndex}
+                      activeShape={renderActiveShape}
                       onMouseEnter={(_, index) => setActivePieIndex(index)}
                       onMouseLeave={() => setActivePieIndex(null)}
                     >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} style={{ outline: 'none', cursor: 'pointer' }} />
+                      {expenseCategoryDistribution.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={entry.color}
+                          style={{ outline: "none", cursor: "pointer" }}
+                        />
                       ))}
                     </Pie>
                     <Tooltip />
@@ -757,24 +1081,36 @@ const Dashboard = () => {
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
                   <div className="text-center transition-all">
                     <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest opacity-80">
-                      {activePieIndex !== null ? pieData[activePieIndex]?.name : 'Overall'}
+                      {activePieIndex !== null
+                        ? expenseCategoryDistribution[activePieIndex]?.name
+                        : "Overall"}
                     </p>
                     <p className="text-2xl font-black text-zinc-900 dark:text-zinc-100 tracking-tighter">
-                      ₹{activePieIndex !== null ? pieData[activePieIndex]?.value.toLocaleString('en-IN') : stats.expenses.toLocaleString('en-IN')}
+                      ₹
+                      {activePieIndex !== null
+                        ? expenseCategoryDistribution[
+                            activePieIndex
+                          ]?.value.toLocaleString("en-IN")
+                        : dashboardTotals.expenses.toLocaleString("en-IN")}
                     </p>
                   </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-x-2 gap-y-4 mt-6">
-                {pieData.map((item, idx) => (
+                {expenseCategoryDistribution.map((item, idx) => (
                   <div
                     key={item.name}
-                    className={`flex items-center gap-2 cursor-pointer transition-opacity duration-200 ${activePieIndex !== null && activePieIndex !== idx ? 'opacity-30' : 'opacity-100 hover:opacity-80'}`}
+                    className={`flex items-center gap-2 cursor-pointer transition-opacity duration-200 ${activePieIndex !== null && activePieIndex !== idx ? "opacity-30" : "opacity-100 hover:opacity-80"}`}
                     onMouseEnter={() => setActivePieIndex(idx)}
                     onMouseLeave={() => setActivePieIndex(null)}
                   >
-                    <div className="w-3 h-3 rounded-md shadow-sm shrink-0" style={{ backgroundColor: item.color }} />
-                    <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300 capitalize truncate">{item.name}</span>
+                    <div
+                      className="w-3 h-3 rounded-md shadow-sm shrink-0"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300 capitalize truncate">
+                      {item.name}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -785,7 +1121,10 @@ const Dashboard = () => {
 
       {/* ── Budget Guardrails ───────────────────────────────── */}
       <motion.div
-        variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+        variants={{
+          hidden: { opacity: 0, y: 20 },
+          visible: { opacity: 1, y: 0 },
+        }}
         className="card"
       >
         <div className="flex items-center justify-between mb-6">
@@ -794,9 +1133,13 @@ const Dashboard = () => {
               <ShieldAlert size={20} className="text-indigo-500" />
               Budget Guardrails
             </h3>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">Monthly spend vs. your set limit</p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+              Monthly spend vs. your set limit
+            </p>
           </div>
-          <span className="text-xs font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">This Month</span>
+          <span className="text-xs font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
+            This Month
+          </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -811,17 +1154,17 @@ const Dashboard = () => {
               // Conditional colour logic — spec: 100%+ Danger, 80%+ Warning, else Safe
               let barColor, bgColor, pctColor;
               if (pct >= 100) {
-                barColor = 'bg-red-600 animate-pulse';
-                bgColor = 'bg-red-50 dark:bg-red-900/20';
-                pctColor = 'text-red-500 dark:text-red-400';
+                barColor = "bg-red-600 animate-pulse";
+                bgColor = "bg-red-50 dark:bg-red-900/20";
+                pctColor = "text-red-500 dark:text-red-400";
               } else if (pct >= 80) {
-                barColor = 'bg-orange-500';
-                bgColor = 'bg-orange-50 dark:bg-orange-900/20';
-                pctColor = 'text-orange-500 dark:text-orange-400';
+                barColor = "bg-orange-500";
+                bgColor = "bg-orange-50 dark:bg-orange-900/20";
+                pctColor = "text-orange-500 dark:text-orange-400";
               } else {
-                barColor = 'bg-emerald-500';
-                bgColor = 'bg-emerald-50 dark:bg-emerald-900/20';
-                pctColor = 'text-emerald-600 dark:text-emerald-400';
+                barColor = "bg-emerald-500";
+                bgColor = "bg-emerald-50 dark:bg-emerald-900/20";
+                pctColor = "text-emerald-600 dark:text-emerald-400";
               }
 
               return (
@@ -831,8 +1174,12 @@ const Dashboard = () => {
                 >
                   {/* Header row — category name + percentage badge */}
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{category}</span>
-                    <span className={`text-xs font-bold tabular-nums ${pctColor}`}>
+                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                      {category}
+                    </span>
+                    <span
+                      className={`text-xs font-bold tabular-nums ${pctColor}`}
+                    >
                       {pctRounded}%
                     </span>
                   </div>
@@ -842,7 +1189,11 @@ const Dashboard = () => {
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${clampedPct}%` }}
-                      transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
+                      transition={{
+                        duration: 0.8,
+                        ease: "easeOut",
+                        delay: 0.1,
+                      }}
                       className={`h-full ${barColor} transition-all duration-500`}
                     />
                   </div>
@@ -850,10 +1201,10 @@ const Dashboard = () => {
                   {/* Spent / Limit labels */}
                   <div className="mt-2 flex items-center justify-between">
                     <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">
-                      Spent: ₹{spent.toLocaleString('en-IN')}
+                      Spent: ₹{spent.toLocaleString("en-IN")}
                     </span>
                     <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">
-                      Limit: ₹{budget.toLocaleString('en-IN')}
+                      Limit: ₹{budget.toLocaleString("en-IN")}
                     </span>
                   </div>
 
@@ -864,7 +1215,7 @@ const Dashboard = () => {
                       animate={{ opacity: 1, y: 0 }}
                       className="mt-2 text-[10px] font-bold text-red-500 dark:text-red-400 uppercase tracking-wider"
                     >
-                      ⚠ Over by ₹{(spent - budget).toLocaleString('en-IN')}
+                      ⚠ Over by ₹{(spent - budget).toLocaleString("en-IN")}
                     </motion.p>
                   )}
                 </div>
@@ -875,7 +1226,10 @@ const Dashboard = () => {
 
       {/* ── Savings Goals ─────────────────────────────────────── */}
       <motion.div
-        variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+        variants={{
+          hidden: { opacity: 0, y: 20 },
+          visible: { opacity: 1, y: 0 },
+        }}
         className="card"
       >
         <div className="flex items-center justify-between mb-6">
@@ -884,7 +1238,9 @@ const Dashboard = () => {
               <Trophy size={20} className="text-amber-500" />
               Savings Goals
             </h3>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">Track your progress to financial freedom</p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+              Track your progress to financial freedom
+            </p>
           </div>
           {!isViewer && (
             <button
@@ -899,13 +1255,17 @@ const Dashboard = () => {
         {(goals || []).length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 px-4 bg-zinc-50 dark:bg-zinc-800/20 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
             <span className="text-4xl mb-3">🎯</span>
-            <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">No active goals yet.</p>
-            <p className="text-xs text-zinc-500 mt-1 max-w-xs text-center">Set up an emergency fund or plan for a vacation.</p>
+            <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+              No active goals yet.
+            </p>
+            <p className="text-xs text-zinc-500 mt-1 max-w-xs text-center">
+              Set up an emergency fund or plan for a vacation.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
             <AnimatePresence mode="popLayout">
-              {(goals || []).map(goal => (
+              {(goals || []).map((goal) => (
                 <GoalCard key={goal.id} goal={goal} onDelete={deleteGoal} />
               ))}
             </AnimatePresence>
@@ -916,9 +1276,17 @@ const Dashboard = () => {
       {/* Bottom Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Transactions */}
-        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="card lg:col-span-2">
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, y: 20 },
+            visible: { opacity: 1, y: 0 },
+          }}
+          className="card lg:col-span-2"
+        >
           <div className="flex items-center justify-between mb-8">
-            <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">Recent Transactions</h3>
+            <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">
+              Recent Transactions
+            </h3>
             <button className="text-sm font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 hover:underline underline-offset-4">
               View All <ArrowRight size={14} />
             </button>
@@ -927,22 +1295,37 @@ const Dashboard = () => {
             {(transactions || []).length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                  <ArrowRight size={28} className="text-zinc-300 dark:text-zinc-600" />
+                  <ArrowRight
+                    size={28}
+                    className="text-zinc-300 dark:text-zinc-600"
+                  />
                 </div>
-                <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300 mt-2 text-center">No data yet</p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 text-center">Add a transaction to get started.</p>
+                <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300 mt-2 text-center">
+                  No data yet
+                </p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 text-center">
+                  Add a transaction to get started.
+                </p>
               </div>
             ) : (
-              (transactions || []).slice(0, 5).map(tx => (
-                <TransactionItem key={tx.id} {...tx} />
-              ))
+              (transactions || [])
+                .slice(0, 5)
+                .map((tx) => <TransactionItem key={tx.id} {...tx} />)
             )}
           </div>
         </motion.div>
 
         {/* Insights Section */}
-        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="card space-y-8">
-          <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">Insights</h3>
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, y: 20 },
+            visible: { opacity: 1, y: 0 },
+          }}
+          className="card space-y-8"
+        >
+          <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">
+            Insights
+          </h3>
 
           <div className="space-y-6">
             <div className="flex items-center gap-4 group">
@@ -950,11 +1333,15 @@ const Dashboard = () => {
                 <Zap size={20} />
               </div>
               <div>
-                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Impulse Score</p>
+                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                  Impulse Score
+                </p>
                 <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">
-                  {impulseStats.thisWeek} small purchases this week
+                  {microTransactionAnalysis.thisWeek} small purchases this week
                 </h4>
-                <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">{impulseStats.trendText}</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
+                  {microTransactionAnalysis.trendText}
+                </p>
               </div>
             </div>
 
@@ -963,11 +1350,13 @@ const Dashboard = () => {
                 <PieIcon size={20} />
               </div>
               <div>
-                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Top Spending Category</p>
+                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                  Top Spending Category
+                </p>
                 <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">
-                  {pieData.length > 0
-                    ? `${[...pieData].sort((a, b) => b.value - a.value)[0].name} — ₹${[...pieData].sort((a, b) => b.value - a.value)[0].value.toLocaleString('en-IN')}`
-                    : 'None'}
+                  {expenseCategoryDistribution.length > 0
+                    ? `${[...expenseCategoryDistribution].sort((a, b) => b.value - a.value)[0].name} — ₹${[...expenseCategoryDistribution].sort((a, b) => b.value - a.value)[0].value.toLocaleString("en-IN")}`
+                    : "None"}
                 </h4>
               </div>
             </div>
@@ -977,8 +1366,12 @@ const Dashboard = () => {
                 <TrendingDown size={20} />
               </div>
               <div>
-                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Monthly Spending</p>
-                <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">₹{stats.expenses.toLocaleString('en-IN')} this month</h4>
+                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                  Monthly Spending
+                </p>
+                <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">
+                  ₹{dashboardTotals.expenses.toLocaleString("en-IN")} this month
+                </h4>
               </div>
             </div>
 
@@ -987,9 +1380,13 @@ const Dashboard = () => {
                 <Search size={20} />
               </div>
               <div>
-                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Balance Status</p>
+                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                  Balance Status
+                </p>
                 <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">
-                  {stats.balance > 10000 ? 'Positive Growth' : 'Spending exceeds income'}
+                  {dashboardTotals.balance > 10000
+                    ? "Positive Growth"
+                    : "Spending exceeds income"}
                 </h4>
               </div>
             </div>
@@ -999,12 +1396,16 @@ const Dashboard = () => {
             <div className="relative z-10">
               <h4 className="text-white font-bold">Pro Savings Goal</h4>
               <p className="text-indigo-100 text-xs mt-1">Goal: ₹20,000</p>
-              <p className="text-white text-lg font-bold mt-2">₹{stats.balance.toLocaleString('en-IN')}</p>
+              <p className="text-white text-lg font-bold mt-2">
+                ₹{dashboardTotals.balance.toLocaleString("en-IN")}
+              </p>
               <div className="w-full h-1.5 bg-indigo-400/50 rounded-full mt-4">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: `${Math.min((stats.balance / 20000) * 100, 100)}%` }}
-                  transition={{ duration: 1, ease: 'easeOut' }}
+                  animate={{
+                    width: `${Math.min((dashboardTotals.balance / 20000) * 100, 100)}%`,
+                  }}
+                  transition={{ duration: 1, ease: "easeOut" }}
                   className="h-full bg-white rounded-full"
                 />
               </div>
@@ -1016,10 +1417,10 @@ const Dashboard = () => {
         </motion.div>
       </div>
 
-      <AddGoalModal 
-        isOpen={isGoalModalOpen} 
-        onClose={() => setIsGoalModalOpen(false)} 
-        onAdd={addGoal} 
+      <AddGoalModal
+        isOpen={isGoalModalOpen}
+        onClose={() => setIsGoalModalOpen(false)}
+        onAdd={addGoal}
       />
 
       {/* Floating Action Button (FAB) for mobile thumb access */}
@@ -1040,7 +1441,7 @@ const Dashboard = () => {
             </motion.button>
           )}
         </AnimatePresence>,
-        document.body
+        document.body,
       )}
     </motion.div>
   );

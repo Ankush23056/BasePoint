@@ -33,6 +33,8 @@ const INCOME_CATEGORIES = [
 
 const GOAL_CATEGORIES = ['Savings', 'Investment'];
 
+// Developer Note: Transaction modal utilizing a simulated delay to provide a premium 'processing' feel
+// while handling automatic goal contributions for Savings/Investment categories.
 const AddTransactionModal = ({ isOpen, onClose, onAdd }) => {
   const { goals, contributeToGoal } = useAppStore();
 
