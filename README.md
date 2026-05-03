@@ -91,7 +91,7 @@ Watch the Daily Spending Power widget to see how much "Safe Money" you have left
 ## 👤 Author
 **Ankush Kumar | Frontend Developer**
 📍 Mumbai, India
-🌐 [Portfolio](https://ankush-dev.netlify.app/)
+🌐 [Portfolio](https://dev-ankush.vercel.app/)
 
 ---
 
