@@ -354,6 +354,40 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [activePieIndex, setActivePieIndex] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showFixedFAB, setShowFixedFAB] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const btn = document.getElementById('primary-add-button');
+      if (!btn) {
+        setShowFixedFAB(true);
+        return;
+      }
+
+      const rect = btn.getBoundingClientRect();
+      
+      // Check if the button is within the viewport
+      const isVisible = rect.bottom > 0 && rect.top < window.innerHeight;
+      setShowFixedFAB(!isVisible);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Initial check with a small delay for mounting
+    const timer = setTimeout(handleScroll, 100);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timer);
+    };
+  }, []);
 
   const isViewer = role === 'Viewer';
 
@@ -362,6 +396,47 @@ const Dashboard = () => {
     const income = txns.reduce((acc, curr) => curr.isPositive ? acc + curr.amount : acc, 0);
     const expenses = txns.reduce((acc, curr) => !curr.isPositive ? acc + curr.amount : acc, 0);
     return { balance: income - expenses, income, expenses };
+  }, [transactions]);
+
+  const growthStats = useMemo(() => {
+    const txns = transactions || [];
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const prevDate = new Date(currentYear, currentMonth - 1, 1);
+    const prevMonth = prevDate.getMonth();
+    const prevYear = prevDate.getFullYear();
+
+    const current = txns.reduce((acc, t) => {
+      const d = new Date(t.date);
+      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+        if (t.isPositive) acc.income += t.amount;
+        else acc.expenses += t.amount;
+      }
+      return acc;
+    }, { income: 0, expenses: 0 });
+
+    const previous = txns.reduce((acc, t) => {
+      const d = new Date(t.date);
+      if (d.getMonth() === prevMonth && d.getFullYear() === prevYear) {
+        if (t.isPositive) acc.income += t.amount;
+        else acc.expenses += t.amount;
+      }
+      return acc;
+    }, { income: 0, expenses: 0 });
+
+    const calculateGrowth = (curr, prev) => {
+      if (prev === 0) return '0%';
+      const growth = ((curr - prev) / Math.abs(prev)) * 100;
+      return `${growth >= 0 ? '+' : ''}${growth.toFixed(1)}%`;
+    };
+
+    return {
+      balance: calculateGrowth(current.income - current.expenses, previous.income - previous.expenses),
+      income: calculateGrowth(current.income, previous.income),
+      expenses: calculateGrowth(current.expenses, previous.expenses)
+    };
   }, [transactions]);
 
   const pieData = useMemo(() => {
@@ -547,6 +622,24 @@ const Dashboard = () => {
         </div>
       </motion.div>
 
+      {/* Primary Add Transaction Button (Visible on Dashboard) */}
+      {!isViewer && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex justify-center"
+        >
+          <button
+            id="primary-add-button"
+            onClick={() => setIsModalOpen(true)}
+            className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-3 font-bold text-lg transition-all active:scale-[0.98]"
+          >
+            <Plus size={24} strokeWidth={2.5} />
+            Add New Transaction
+          </button>
+        </motion.div>
+      )}
+
       {/* 3 Top Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard
@@ -555,7 +648,7 @@ const Dashboard = () => {
           icon={<IndianRupee size={22} />}
           iconBg="bg-blue-50 dark:bg-blue-900/20"
           iconColor="text-blue-600 dark:text-blue-400"
-          trend="+4.2%"
+          trend={growthStats.balance}
           trendLabel="from last month"
         />
         <StatCard
@@ -564,7 +657,7 @@ const Dashboard = () => {
           icon={<TrendingUp size={22} />}
           iconBg="bg-emerald-50 dark:bg-emerald-900/20"
           iconColor="text-emerald-600 dark:text-emerald-400"
-          trend="+12.5%"
+          trend={growthStats.income}
           trendLabel="from last month"
         />
         <StatCard
@@ -573,7 +666,7 @@ const Dashboard = () => {
           icon={<TrendingDown size={22} />}
           iconBg="bg-rose-50 dark:bg-rose-900/20"
           iconColor="text-rose-600 dark:text-rose-400"
-          trend="-1.2%"
+          trend={growthStats.expenses}
           trendLabel="from last month"
         />
       </div>
@@ -592,8 +685,8 @@ const Dashboard = () => {
               <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">Balance</span>
             </div>
           </div>
-          <div className="flex-1 w-full h-[250px] sm:h-[300px] lg:h-[350px] min-w-0">
-            {transactions.length === 0 ? (
+          <div className="flex-1 w-full flex flex-col relative min-h-[250px] sm:min-h-[300px] lg:min-h-[350px]">
+            {(transactions || []).length === 0 ? (
               <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-zinc-50 dark:bg-zinc-800/20 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
                 <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
                   <TrendingUp size={28} className="text-zinc-300 dark:text-zinc-600" />
@@ -605,18 +698,18 @@ const Dashboard = () => {
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={lineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={lineData} margin={{ top: 10, right: 10, left: isMobile ? 10 : -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.4} />
                       <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#E5E7EB" opacity={0.6} />
+                  {!isMobile && <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#E5E7EB" opacity={0.6} />}
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }} tickFormatter={(val) => `₹${val / 1000}k`} />
+                  {!isMobile && <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280', fontWeight: 500 }} tickFormatter={(val) => `₹${val / 1000}k`} />}
                   <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#6366F1', strokeWidth: 1.5, strokeDasharray: '4 4' }} />
-                  <Area type="monotone" dataKey="value" stroke="#4F46E5" strokeWidth={3} fillOpacity={1} fill="url(#colorBalance)" dot={{ r: 5, fill: '#4F46E5', strokeWidth: 2, stroke: '#ffffff' }} activeDot={{ r: 7, fill: '#4F46E5', strokeWidth: 3, stroke: '#ffffff' }} />
+                  <Area type="monotone" dataKey="value" stroke="#4F46E5" strokeWidth={3} fillOpacity={1} fill="url(#colorBalance)" dot={!isMobile ? { r: 5, fill: '#4F46E5', strokeWidth: 2, stroke: '#ffffff' } : false} activeDot={{ r: 7, fill: '#4F46E5', strokeWidth: 3, stroke: '#ffffff' }} />
                 </AreaChart>
               </ResponsiveContainer>
             )}
@@ -627,7 +720,7 @@ const Dashboard = () => {
         <motion.div variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1 } }} className="card flex flex-col">
           <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100 mb-8">Spending by Category</h3>
 
-          {pieData.length === 0 ? (
+          {(pieData || []).length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 min-h-[250px]">
               <div className="w-20 h-20 rounded-3xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
                 <PieIcon size={36} className="text-zinc-300 dark:text-zinc-600" />
@@ -926,16 +1019,22 @@ const Dashboard = () => {
       />
 
       {/* Floating Action Button (FAB) for mobile thumb access */}
-      {!isViewer && (
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setIsModalOpen(true)}
-          className="fixed bottom-6 right-6 z-40 w-16 h-16 bg-indigo-600 text-white rounded-full shadow-2xl shadow-indigo-600/40 flex sm:hidden items-center justify-center hover:bg-indigo-700 transition-colors"
-        >
-          <Plus size={32} strokeWidth={2.5} />
-        </motion.button>
-      )}
+      <AnimatePresence>
+        {!isViewer && (showFixedFAB || (transactions || []).length === 0) && (
+          <motion.button
+            key="fixed-fab"
+            initial={{ opacity: 0, scale: 0, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0, y: 20 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setIsModalOpen(true)}
+            className="fixed bottom-8 right-6 z-[9999] w-16 h-16 bg-indigo-600 text-white rounded-full shadow-2xl shadow-indigo-600/40 flex items-center justify-center hover:bg-indigo-700 transition-all border-4 border-white dark:border-zinc-900"
+          >
+            <Plus size={32} strokeWidth={3} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
