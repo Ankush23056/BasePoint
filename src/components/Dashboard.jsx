@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import {
   TrendingUp,
@@ -364,32 +364,35 @@ const Dashboard = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const btn = document.getElementById('primary-add-button');
-      if (!btn) {
-        setShowFixedFAB(true);
-        return;
-      }
+  const isViewer = role === 'Viewer';
 
-      const rect = btn.getBoundingClientRect();
-      
-      // Check if the button is within the viewport
-      const isVisible = rect.bottom > 0 && rect.top < window.innerHeight;
-      setShowFixedFAB(!isVisible);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    // Initial check with a small delay for mounting
-    const timer = setTimeout(handleScroll, 100);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      clearTimeout(timer);
-    };
+  const observerRef = useRef(null);
+  const buttonRef = useCallback(node => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+    
+    if (node) {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          setShowFixedFAB(!entry.isIntersecting);
+        },
+        { threshold: 0, root: null }
+      );
+      observer.observe(node);
+      observerRef.current = observer;
+    } else {
+      setShowFixedFAB(true);
+    }
   }, []);
 
-  const isViewer = role === 'Viewer';
+  useEffect(() => {
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
 
   const stats = useMemo(() => {
     const txns = transactions || [];
@@ -630,6 +633,7 @@ const Dashboard = () => {
           className="flex justify-center"
         >
           <button
+            ref={buttonRef}
             id="primary-add-button"
             onClick={() => setIsModalOpen(true)}
             className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-3 font-bold text-lg transition-all active:scale-[0.98]"
@@ -796,7 +800,7 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-          {Object.entries(categoryBudgets)
+          {Object.entries(categoryBudgets || {})
             .filter(([, budget]) => budget > 0)
             .map(([category, budget]) => {
               const spent = categorySpend[category] || 0;
@@ -892,7 +896,7 @@ const Dashboard = () => {
           )}
         </div>
 
-        {goals.length === 0 ? (
+        {(goals || []).length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 px-4 bg-zinc-50 dark:bg-zinc-800/20 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
             <span className="text-4xl mb-3">🎯</span>
             <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">No active goals yet.</p>
@@ -901,7 +905,7 @@ const Dashboard = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
             <AnimatePresence mode="popLayout">
-              {goals.map(goal => (
+              {(goals || []).map(goal => (
                 <GoalCard key={goal.id} goal={goal} onDelete={deleteGoal} />
               ))}
             </AnimatePresence>
@@ -920,7 +924,7 @@ const Dashboard = () => {
             </button>
           </div>
           <div className="space-y-1">
-            {transactions.length === 0 ? (
+            {(transactions || []).length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
                   <ArrowRight size={28} className="text-zinc-300 dark:text-zinc-600" />
@@ -929,7 +933,7 @@ const Dashboard = () => {
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 text-center">Add a transaction to get started.</p>
               </div>
             ) : (
-              transactions.slice(0, 5).map(tx => (
+              (transactions || []).slice(0, 5).map(tx => (
                 <TransactionItem key={tx.id} {...tx} />
               ))
             )}
@@ -1019,22 +1023,25 @@ const Dashboard = () => {
       />
 
       {/* Floating Action Button (FAB) for mobile thumb access */}
-      <AnimatePresence>
-        {!isViewer && (showFixedFAB || (transactions || []).length === 0) && (
-          <motion.button
-            key="fixed-fab"
-            initial={{ opacity: 0, scale: 0, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0, y: 20 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setIsModalOpen(true)}
-            className="fixed bottom-8 right-6 z-[9999] w-16 h-16 bg-indigo-600 text-white rounded-full shadow-2xl shadow-indigo-600/40 flex items-center justify-center hover:bg-indigo-700 transition-all border-4 border-white dark:border-zinc-900"
-          >
-            <Plus size={32} strokeWidth={3} />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {ReactDOM.createPortal(
+        <AnimatePresence>
+          {!isViewer && showFixedFAB && (
+            <motion.button
+              key="fixed-fab"
+              initial={{ opacity: 0, scale: 0, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0, y: 20 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsModalOpen(true)}
+              className="fixed bottom-8 right-6 z-[9999] w-16 h-16 bg-indigo-600 text-white rounded-full shadow-2xl shadow-indigo-600/40 flex items-center justify-center hover:bg-indigo-700 transition-all border-4 border-white dark:border-zinc-900"
+            >
+              <Plus size={32} strokeWidth={3} />
+            </motion.button>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </motion.div>
   );
 };
