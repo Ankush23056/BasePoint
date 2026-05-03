@@ -591,7 +591,7 @@ const Dashboard = () => {
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={() => setIsModalOpen(true)}
-              className="btn-primary hidden sm:flex items-center gap-2"
+              className="btn-primary hidden md:flex items-center gap-2"
             >
               <Plus size={20} />
               Add Transaction
@@ -630,7 +630,7 @@ const Dashboard = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex justify-center"
+          className="flex md:hidden justify-center"
         >
           <button
             ref={buttonRef}
@@ -1025,7 +1025,7 @@ const Dashboard = () => {
       {/* Floating Action Button (FAB) for mobile thumb access */}
       {ReactDOM.createPortal(
         <AnimatePresence>
-          {!isViewer && showFixedFAB && (
+          {!isViewer && showFixedFAB && isMobile && (
             <motion.button
               key="fixed-fab"
               initial={{ opacity: 0, scale: 0, y: 20 }}
