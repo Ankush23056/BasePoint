@@ -1,6 +1,6 @@
 # 📊 BasePoint | Modern Budgeting Coach
 
-🔗 **Live Demo:** [https://basepoiint.netlify.app/](https://basepoiint.netlify.app/)
+🔗 **Live Demo:** [https://base-point.vercel.app/](https://base-point.vercel.app/)
 
 💻 **Github:** [https://github.com/Ankush23056/BasePoint.git](https://github.com/Ankush23056/BasePoint.git)
 
@@ -89,8 +89,10 @@ Watch the Daily Spending Power widget to see how much "Safe Money" you have left
 ---
 
 ## 👤 Author
-**Ankush Kumar | Frontend Developer**  
-📍 Mumbai, India  
+**Ankush Kumar | Frontend Developer**
+📍 Mumbai, India
 🌐 [Portfolio](https://ankush-dev.netlify.app/)
+
+---
 
 *Turning complex data into intuitive, behavioral tools.*
