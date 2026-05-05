@@ -31,6 +31,11 @@ const DEFAULT_BUDGETS = {
 const useAppStore = create(
   persist(
     (set) => ({
+      // Profile State
+      profileName: 'Ankush Kumar',
+      profileEmail: 'Ankush@basepoint.io',
+      setProfile: (name, email) => set({ profileName: name, profileEmail: email }),
+
       // RBAC State
       role: 'Admin',
       setRole: (newRole) => set({ role: newRole }),
@@ -64,10 +69,12 @@ const useAppStore = create(
     }),
     {
       name: 'basepoint-app-storage',
-      version: 5,
+      version: 6,
       // migrate runs whenever stored version < current version.
       // Returns the fresh sample state so old stale data is wiped.
       migrate: () => ({
+        profileName: 'Ankush Kumar',
+        profileEmail: 'Ankush@basepoint.io',
         role: 'Admin',
         transactions: SAMPLE_TRANSACTIONS,
         categoryBudgets: DEFAULT_BUDGETS,

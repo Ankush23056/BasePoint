@@ -106,16 +106,14 @@ const ConfirmDialog = ({ title, message, onConfirm, onCancel, confirmLabel = 'Co
 /* ── Main Settings page ────────────────────────────────────────── */
 const Settings = () => {
   const { theme, toggleTheme } = useTheme();
-  const { role, setRole, transactions, addTransaction, clearAllTransactions, categoryBudgets, setCategoryBudget, resetBudgets } = useAppStore();
+  const { role, setRole, transactions, addTransaction, clearAllTransactions, categoryBudgets, setCategoryBudget, resetBudgets, profileName, profileEmail, setProfile } = useAppStore();
   const { showToast } = useToast();
 
   // Budget modal state
   const [showBudgetModal, setShowBudgetModal] = useState(false);
   const [tempBudgets, setTempBudgets] = useState({});
 
-  // Profile state
-  const [profileName, setProfileName] = useState('Ankush Kumar');
-  const [profileEmail, setProfileEmail] = useState('Ankush@basepoint.io');
+  // Profile edit state (temp values while editing — not persisted until saved)
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [tempName, setTempName] = useState(profileName);
   const [tempEmail, setTempEmail] = useState(profileEmail);
@@ -131,8 +129,7 @@ const Settings = () => {
 
   const saveProfile = () => {
     if (!tempName.trim()) return;
-    setProfileName(tempName.trim());
-    setProfileEmail(tempEmail.trim());
+    setProfile(tempName.trim(), tempEmail.trim());
     setIsEditingProfile(false);
     showToast({ type: 'success', title: 'Profile Updated', message: 'Your profile changes have been saved.' });
   };
